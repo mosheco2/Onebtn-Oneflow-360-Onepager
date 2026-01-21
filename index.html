@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ONEBTN Investor Kit</title>
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Assistant:wght@200;300;400;600;700;800&display=swap');
+        
+        body {
+            font-family: 'Assistant', sans-serif;
+            background-color: #f1f5f9;
+            color: #1e293b;
+        }
+
+        /* --- Print Optimization Fixes --- */
+        @media print {
+            @page { 
+                size: A4 landscape; 
+                margin: 5mm; 
+            }
+
+            body { 
+                background-color: white; 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+                min-width: 1000px; 
+            }
+
+            /* Hide Navigation and Buttons */
+            nav, .no-print { display: none !important; }
+            
+            /* Clean up main container */
+            main { 
+                padding: 0 !important; 
+                margin: 0 !important; 
+                max-width: 100% !important; 
+                width: 100% !important; 
+                box-shadow: none !important; 
+            }
+            .main-container {
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 10px !important;
+                max-width: 100% !important;
+            }
+
+            /* --- FORCE LAYOUT VISIBILITY --- */
+            
+            /* 1. Force Grid for Columns */
+            .print-grid-force {
+                display: grid !important;
+                grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+                gap: 1.5rem !important; 
+            }
+
+            /* 2. Force Flex Row for Header */
+            .print-flex-row-force {
+                display: flex !important;
+                flex-direction: row !important;
+            }
+
+            /* 3. FORCE LOGO VISIBILITY (The Fix) */
+            .print-visible-force {
+                display: block !important;
+            }
+            .print-flex-force {
+                display: flex !important;
+            }
+
+            /* Adjust text alignment for print */
+            .print-text-start {
+                text-align: right !important; /* Assuming RTL */
+            }
+            html[dir="ltr"] .print-text-start {
+                text-align: left !important;
+            }
+
+            /* Visual Cleanup */
+            .shadow-2xl, .shadow-sm, .shadow-md { box-shadow: none !important; border: 1px solid #e2e8f0; }
+            .bg-slate-900 { color: white !important; }
+            .break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
+            .tab-content:not(.active-print) { display: none; }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, Component } = React;
+
+        // --- Error Boundary ---
+        class ErrorBoundary extends Component {
+            constructor(props) {
+                super(props);
+                this.state = { hasError: false, error: null };
+            }
+            static getDerivedStateFromError(error) { return { hasError: true, error }; }
+            render() {
+                if (this.state.hasError) return <div className="p-10 text-red-600">Something went wrong. Please refresh.</div>;
+                return this.props.children;
+            }
+        }
+
+        // --- Safe Image Component ---
+        const SafeImage = ({ src, alt, className, fallback }) => {
+            const [hasError, setHasError] = useState(false);
+            if (hasError || !src) return fallback;
+            return <img src={src} alt={alt} className={className} onError={() => setHasError(true)} />;
+        };
+
+        // --- Data ---
+        const financialData = [
+            { year: '2026', rev: 0.25 },
+            { year: '2027', rev: 1.3 },
+            { year: '2028', rev: 3.6 },
+            { year: '2029', rev: 5.4 },
+            { year: '2030', rev: 7.7 },
+            { year: '2031', rev: 12 },
+        ];
+
+        // --- Icons ---
+        const icons = {
+            Globe: <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 0 1 9-9" />,
+            CheckCircle: <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4 12 14.01l-3-3" />,
+            ShieldCheck: <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M9 12l2 2 4-4" />,
+            Target: <g><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></g>,
+            Zap: <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />,
+            BarChart3: <path d="M3 3v18h18 M18 17V9 M13 17V5 M8 17v-3" />,
+            LayoutGrid: <g><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></g>,
+            Map: <g><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" /><line x1="9" x2="9" y1="3" y2="18" /><line x1="15" x2="15" y1="6" y2="21" /></g>,
+            Users: <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 8.5a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M23 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75" />,
+            Star: <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />,
+            DollarSign: <g><line x1="12" x2="12" y1="2" y2="22" /><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" /></g>,
+            TrendingUp: <path d="m23 6-9.5 9.5-5-5L1 18 M17 6h6v6" />,
+            Layers: <g><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z" /><path d="m22 17.65-9.17 4.16a2 2 0 0 1-1.66 0L2 17.65" /><path d="m22 12-9.17 4.16a2 2 0 0 1-1.66 0L2 12" /></g>,
+            Cpu: <g><rect x="4" y="4" width="16" height="16" rx="2" /><rect x="9" y="9" width="6" height="6" /><path d="M9 1v3"/><path d="M15 1v3"/><path d="M9 20v3"/><path d="M15 20v3"/><path d="M20 9h3"/><path d="M20 14h3"/><path d="M1 9h3"/><path d="M1 14h3"/></g>,
+            Network: <g><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-3a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3"/><path d="M12 12V8"/></g>,
+            Printer: <g><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect width="12" height="8" x="6" y="14" /></g>,
+            MessageSquare: <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />,
+            Coffee: <g><path d="M17 8h1a4 4 0 1 1 0 8h-1" /><path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z" /><line x1="6" x2="6" y1="2" y2="4" /><line x1="10" x2="10" y1="2" y2="4" /><line x1="14" x2="14" y1="2" y2="4" /></g>,
+            Mic: <g><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" x2="12" y1="19" y2="22" /></g>,
+            Briefcase: <g><rect width="20" height="14" x="2" y="7" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></g>,
+            Clock: <g><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></g>,
+            AlertTriangle: <g><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" /><line x1="12" x2="12" y1="9" y2="13" /><line x1="12" x2="12.01" y1="17" y2="17" /></g>,
+            ChevronDown: <path d="m6 9 6 6 6-6" />,
+            ChevronUp: <path d="m18 15-6-6-6 6" />,
+            Handshake: <g><path d="m19 11-6-6-6 6"/><path d="m5 19 6-6 6 6"/><path d="M2 12h20"/><path d="M2 19h20"/></g>,
+            Database: <g><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></g>,
+            Rocket: <g><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.48-.56.63-1.28.63-1.28l9-9c2.63-2.61 3.5-5.8 3.87-7.22a.5.5 0 0 0-.62-.62c-1.42.37-4.61 1.24-7.22 3.87l-9 9c0 .01-.72.16-1.28.64Z"/><path d="m12 15 2 2"/><path d="m5 2 5 5"/></g>
+        };
+
+        const Icon = ({ name, size = 20, className = "" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {icons[name] || <circle cx="12" cy="12" r="10" />}
+            </svg>
+        );
+
+        // --- Simple Line Chart ---
+        const SimpleLineChart = ({ data }) => {
+            const points = data.map((d, i) => {
+                const x = i * 60 + 10;
+                const y = 100 - (d.rev * (80/12)) - 10;
+                return `${x},${y}`;
+            }).join(' ');
+
+            return (
+                <div className="w-full h-32 bg-white relative">
+                    <svg viewBox="0 0 320 120" className="w-full h-full overflow-visible">
+                        <line x1="0" y1="100" x2="320" y2="100" stroke="#e2e8f0" strokeWidth="1" />
+                        <line x1="0" y1="50" x2="320" y2="50" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4" />
+                        <polyline fill="none" stroke="#2563eb" strokeWidth="3" points={points} />
+                        {data.map((d, i) => {
+                            const x = i * 60 + 10;
+                            const y = 100 - (d.rev * (80/12)) - 10;
+                            return (
+                                <g key={i}>
+                                    <circle cx={x} cy={y} r="4" fill="#2563eb" stroke="white" strokeWidth="2" />
+                                    <text x={x} y={115} fontSize="10" textAnchor="middle" fill="#64748b">{d.year}</text>
+                                    <text x={x} y={y - 10} fontSize="10" textAnchor="middle" fill="#2563eb" fontWeight="bold">${d.rev}M</text>
+                                </g>
+                            )
+                        })}
+                    </svg>
+                </div>
+            );
+        };
+
+        // --- Hebrew Content ---
+        const heContent = {
+            nav: { onepager: 'One-Pager', scripts: 'תסריטי פנייה', meeting: 'פגישת ליאור', roadmap: 'תוכנית גיוס' },
+            onepager: {
+                printBtn: 'שמור כ-PDF / הדפס',
+                header: {
+                    tagline: 'מערכת אחת. שליטה אינסופית.',
+                    subTagline: 'עמוד השדרה הדיגיטלי ומעטפת 360 ללקוחות SMB',
+                    vision: `ONEBTN היא חברת טכנולוגיה שפיתחה את ONEFLOW 360 – מערכת ההפעלה הראשונה מסוגה המשמשת כעמוד שדרה דיגיטלי וכמעטפת 360 לכל צרכי עסקים שמוכרים מוצרים. הפלטפורמה מאחדת מכירות, הזמנות, לוגיסטיקה, פיננסים, שיווק, דיוור ונתונים למקום אחד והופכת את העסק ל"מפעל נתונים" חכם ואוטומטי.`,
+                },
+                problem: { title: 'הבעיה: כאוס תפעולי', points: ['ריבוי מערכות: 2-8 כלים נפרדים לכל תהליך', 'נתונים מבודדים (Silos): אין "מקור אמת" אחד', 'עלויות גבוהות: אינטגרציה ותחזוקה יקרות', 'חוסר סקייל: תהליכים ידניים עוצרים צמיחה'] },
+                solution: { title: 'הפתרון: ONEFLOW 360', subtitle: 'מערכת הפעלה עסקית ומעטפת 360', points: ['עמוד שדרה דיגיטלי ללוגיסטיקה, מכירות, הזמנות, נתונים וניהול', '10 מודולים מובנים (CRM, שילוח, ליקוט, BI)', 'חיבור מלא לכל ERP (ללא תלות בספק)', 'התאמה היברידית: תומך B2B ו-B2C בו זמנית'] },
+                innovation: { 
+                    title: 'מנועי צמיחה וחדשנות', 
+                    points: [
+                        {icon: 'Zap', text: 'הקמה אוטונומית (Self-Onboarding): אשף התקנה חכם המאפשר לעסקים ולמיישמים להקים את המערכת לבד, ללא תלות בפיתוח. מפתח ל-Scale גלובלי.'},
+                        {icon: 'Cpu', text: 'בינה מלאכותית (AI Ops): שילוב מנועי AI כבר בליבת המערכת לחיזוי ביקושים, אופטימיזציה של מלאי והמלצות רכש חכמות.'},
+                        {icon: 'Network', text: 'רשת עסקית (Business Network): יכולת אינטגרציה אנכית בין לקוחות (ספק-לקוח). שיתוף קטלוגים וסנכרון מלאי בזמן אמת.'},
+                        {icon: 'Globe', text: 'מרכז כוכב (Star Center): רשת עסקית לחיבור בין עסקים ולהפקת תובנות גלובליות ל-ONEBTN.'}
+                    ] 
+                },
+                businessModel: { title: 'מודל עסקי', setup: 'עלות הקמה: $150 - $25,000', saas: 'SaaS חודשי: $150 - $2,000+', highlight: 'מודל צמיחה: לקוחות משלמים לפי סקייל. לקוח מביא לקוח.' },
+                market: { title: 'שוק ופוטנציאל', tam: '$2.5M עסקים', tamDesc: 'B2B/B2C בארה"ב וישראל', sam: '1.8M עסקים', samDesc: 'עם ריבוי מערכות ונפח גבוה', growth: '17% CAGR', growthDesc: 'צמיחה שנתית באימוץ ענן' },
+                financials: { title: 'תחזית הכנסות (M$)', subtitle: 'יעד 2031: $12M הכנסות', stats: [{ label: 'לקוחות יעד 2031', value: '1,100+' }, { label: 'חסכון ללקוח', value: '30%' }] },
+                traction: { title: 'לקוחות ו-Traction', subtitle: 'מעל 55 לקוחות פעילים', points: ['קבוצת גטר (יבואן ארצי): חוזה ל-10 חברות, התייעלות של 30%.', 'פיצה מרקט (ספק ארצי): 170 הזמנות ביום, חיסכון של 2 משרות.', 'דומיסיל (יבואן ארצי): 400 הזמנות ביום, ירידה של 35% בשגיאות.'] },
+                competition: { title: 'יתרון תחרותי', competitors: 'מול Comax, Pepperi, Softsolutions:', differentiators: ['Unified Core: כל השכבות מחוברות בבסיס', 'Vendor Neutral: לא נועל את הלקוח ל-ERP מסוים', 'Network Effect: חיבור עסקי בין לקוחות', 'B2B/B2C Native: פלטפורמה אחת לשני העולמות'] },
+                roadmap: { title: 'מפת דרכים', steps: [{ year: '2026', text: 'SaaS Core, הקמה אוטונומית, AI חיזוי ביקושים' }, { year: '2027', text: 'מודול תקשורת מוצפן, ERP שלב 1' }, { year: '2028', text: 'הרחבת כלי AI, אופטימיזציה למכירות' }, { year: '2029', text: 'מרקטפלייס B2B גלובלי' }] },
+                partners: { 
+                    title: 'תוכנית שותפים ומיישמים (Force Multiplier)', 
+                    points: [
+                        'אקוסיסטם של שותפים אסטרטגיים ומפיצים (Resellers) להאצת החדירה לשוק.',
+                        'שכבת מיישמים (Implementers): הכשרת מומחים טכנולוגיים עצמאיים לניהול, הפצה והטמעת המערכת.',
+                        'גרסת PRO למיישם: מערכת ייעודית הכוללת CRM רוחבי לשליטה וניהול פורטפוליו לקוחות.'
+                    ] 
+                },
+                scale: {
+                    title: 'מנועי צמיחה ו-Upsell (ARPU Growth)',
+                    points: [
+                        {icon: 'Zap', text: 'חנות מודולים (Marketplace): הוספה והטמעה מיידית (Click-to-Activate) של פיצ\'רים חדשים בתשלום.'},
+                        {icon: 'Database', text: 'שירותי דאטה (DaaS): מונטיזציה של דאטה, דוחות עומק ותובנות AI.'},
+                        {icon: 'LayoutGrid', text: 'Design Store: מכירת ערכות נושא (Themes) ומיתוג מתקדם לאפליקציות.'},
+                        {icon: 'TrendingUp', text: 'הרחבת פעילות: מודל תמחור המעודד הוספת יוזרים וסניפים.'}
+                    ]
+                },
+                team: { 
+                    title: 'הצוות המוביל', 
+                    members: [
+                        { name: 'מושיק כהן', role: 'CEO', desc: 'לשעבר ראש ARCserve ישראל (תחת CA Technologies). ניהל תוכניות לקוחות ברשות הדיגיטל הלאומית ופרויקטים בקנה מידה לאומי.', img: 'moshik.png' }, 
+                        { name: 'אסף כהן', role: 'CTO', desc: '15 שנות ניסיון בתכנון ובניית פלטפורמות בקנה מידה גדול, מונחות נתונים; אחראי על הארכיטקטורה והאבטחה.', img: 'assaf.png' }, 
+                        { name: 'אדיר כהן', role: 'VP R&D', desc: '10 שנות ניסיון Full-Stack; מוביל את תחום הפיתוח, ההטמעה וחוויית המשתמש.', img: 'adir.png' }
+                    ] 
+                },
+                ask: { title: 'ההזדמנות: Seed Round', amount: '$2M', use: '50% חדירה לארה"ב | 50% פיתוח ו-R&D', contact: 'מושיק כהן | 052-6626619 | Moshe@onebutton.co.il' }
+            },
+            scripts: {
+                intro: 'תסריטי פנייה מותאמים אישית למשקיעים ושותפים',
+                types: {
+                    email_lior: '🔥 פנייה למנכ"לית Morning',
+                    email_short: 'מייל קר (קצר)',
+                    email_story: 'מייל "סיפור"',
+                    linkedin: 'הודעת לינקדאין',
+                    pitch: 'פיץ\' טלפוני'
+                },
+                content: {
+                    email_lior: {
+                        subject: "המעבר מ'חשבונית ירוקה' ל-Morning (התייעצות יזמית)",
+                        body: `היי ליאור,
+
+נעים מאוד, אני מושיק כהן, המנכ"ל ואחד המייסדים של ONEBTN.
+
+אני עוקב בהערכה רבה אחרי האבולוציה שעשיתם - המעבר מפתרון נקודתי ("חשבונית ירוקה") לפלטפורמה הוליסטית שמנהלת את העצמאי ("Morning"). זהו מהלך אסטרטגי שאני לומד ממנו המון.
+
+אנחנו בונים היום את מה שאני תופס כ"Morning" של העסקים שמוכרים מוצרים (קמעונאים/סיטונאים).
+במקום שהעסקים האלו יעבדו עם 2-8 מערכות מנותקות, בנינו להם מערכת הפעלה אחת (Unified OS) שמחברת את הכל לזרימה אחת חכמה.
+
+נקודת דמיון נוספת (וחשובה לי אישית) היא ה-DNA שלנו: אנחנו חברת בוטסטראפ מלאה.
+בדיוק כמו בסיפור שלכם, בנינו את הטכנולוגיה ב-10 אצבעות, צמחנו מתוך השטח ומתוך הכנסות של לקוחות אמיתיים.
+
+כעת, כשאנחנו עומדים לפני הקפיצה הבאה (Scale וגיוס ראשון להתרחבות), אשמח מאוד לגנוב לך 15 דקות לשיחה קצרה (בזום או עם כוס קפה 😊).
+
+המטרה היא לשמוע ממך תובנה או שתיים על האיזון שבין "גדילה יציבה" (בלי להיחנק תזרימית) לבין הצורך במימון חיצוני כדי להפוך לפלטפורמה גדולה.
+
+האם זה משהו שיכול להסתדר לך?
+
+תודה רבה,
+מושיק`
+                    },
+                    email_short: {
+                        subject: 'נושא: הזדמנות ב-B2B Tech: להפוך עסקים ל-Waze של התפעול',
+                        body: `היי [שם המשקיע],
+
+אני עוקב אחרי ההשקעות שלכם ב-[תחום רלוונטי] וחשבתי שזה יעניין אותך.
+
+אני מושיק, המנכ"ל של ONEBTN. אנחנו פותרים את הכאב הכי גדול של עסקים שמוכרים מוצרים: "גיהנום האינטגרציות". במקום 5-8 מערכות נפרדות, בנינו את ONEFLOW 360 - פלטפורמה אחת שמנהלת הכל (B2B, B2C, לוגיסטיקה, CRM).
+
+אנחנו כבר עובדים עם שחקנים גדולים כמו קבוצת גטר ופיצה מרקט, מציגים חסכון של 30% בעלויות עבודה, ומכוונים ל-ARR של $12M תוך 5 שנים.
+
+אנו מגייסים $2M לחדירה לשוק האמריקאי. אשמח לשיחה קצרה של 10 דקות.
+
+בברכה,
+מושיק כהן, CEO`
+                    },
+                    email_story: {
+                        subject: 'נושא: הדור הבא של הניהול העסקי (כבר מוכח בשטח)',
+                        body: `היי [שם המשקיע],
+
+רוב העסקים היום מתנהלים כמו "פרנקנשטיין" - ראש של CRM, ידיים של מערכת הזמנות ורגליים של שילוח. שום דבר לא מחובר באמת.
+
+ב-ONEBTN בנינו את עמוד השדרה הדיגיטלי החדש. המערכת שלנו, ONEFLOW 360, הופכת עסקים מ"אוסף כלים" ל"מפעל נתונים חכם".
+
+המספרים מדברים:
+- שוק של 2.5 מיליון עסקים (ישראל + ארה"ב).
+- לקוחות (כמו קבוצת גטר) חווים ירידה של 35% בטעויות ועלייה של 20% במכירות.
+- מודל צמיחה אורגני.
+
+אשמח לשתף אותך בתוכנית להגיע ל-$12M הכנסות עד 2031. מתי נוח לך לדבר?
+
+מושיק כהן, CEO`
+                    },
+                    linkedin: {
+                        body: `היי [שם],
+ראיתי את הפעילות שלך ב-[תחום]. אני מושיק מ-ONEBTN. אנחנו בונים את מערכת ההפעלה האולטימטיבית לעסקים (לקוחות כמו קבוצת גטר כבר בפנים). מגייסים $2M לצמיחה בארה"ב. אשמח להתחבר.`
+                    },
+                    pitch: {
+                        body: `(פתיחה): היי [שם], זה מושיק מ-ONEBTN. תפסתי אותך בזמן טוב?
+
+(הוק): מעולה. פיתחנו פלטפורמה שעושה לעסקים מה ש-Waze עשתה לנהגים. אנחנו מחברים מכירות, מלאי ושילוח למערכת אחת חכמה.
+
+(טרקשן): אנחנו כבר רצים עם לקוחות ענק כמו קבוצת גטר, חוסכים להם 30% מהעלויות, ומגייסים עכשיו $2M כדי לשכפל את ההצלחה בארה"ב.
+
+(סגירה): הייתי שמח להיפגש לקפה או זום של 15 דקות. איך נראה הלו"ז שלך בשלישי?`
+                    }
+                }
+            },
+            meeting: {
+                title: 'תסריט שיחה: ליאור (Morning)',
+                subtitle: 'מטרה: התייעצות על בוטסטראפ וניהול תזרים',
+                sections: [
+                    {
+                        title: '1. פתיחה ומסגור (2 דקות)',
+                        content: `"ליאור, שוב תודה. אני יודע שהזמן שלך יקר.
+אנחנו היום ב-ONEBTN נמצאים בנקודה שבה הייתם לפני כמה שנים: מוצר עובד, לקוחות משלמים, ו-Zero השקעה חיצונית. הכל מהבית.
+אנחנו עומדים בפני הקפיצה הגדולה (Scale לארה"ב), והדילמה הכי גדולה שלי היא 'החמצן' - איך גדלים בלי להיחנק."`
+                    },
+                    {
+                        title: '2. שאלות הליבה (10 דקות)',
+                        questions: [
+                            {
+                                q: 'מילכוד הבוטסטראפ',
+                                text: `"אנחנו מתלבטים בין גדילה איטית ובטוחה (מרווחים) לבין גיוס כסף כדי לרוץ מהר.
+בתקופה של 'חשבונית ירוקה', היו לכם שלבים שהרגשתם שאתם 'נחנקים' בגלל הצמיחה האורגנית?
+איך ידעתם מתי זה הרגע הנכון להביא כסף חיצוני כדי לא לפספס את השוק, ומתי נכון להמשיך לבד כדי לשמור על השליטה?"`
+                            },
+                            {
+                                q: 'ניהול ה-Runway',
+                                text: `"כשבניתם את המעבר ל-Morning (שהצריך פיתוח כבד לפני הכנסות חדשות), איך ניהלתם את הסיכון?
+האם השתמשתם ברווחים השוטפים כדי לממן את הפיתוח החדש (מה שהאט אתכם), או שלקחתם הימור מחושב?"`
+                            },
+                            {
+                                q: 'שמירה על ה-DNA',
+                                text: `"הפחד שלי הוא שהכנסת משקיעים בשלב הזה תשנה את ה-DNA של החברה מחברה שבונה 'מוצר אמיתי' לחברה שרודפת אחרי 'מדדים למשקיעים'. איך אתם שמרתם על התרבות הארגונית שלכם בתהליך הגדילה?"`
+                            }
+                        ]
+                    },
+                    {
+                        title: '3. סגירה ו-Ask עקיף (3 דקות)',
+                        content: `"לקחתי המון. זה עוזר לי מאוד לסדר את המחשבות לקראת הגיוס.
+אני לא רוצה לגזול עוד זמן.
+רק אגיד שאנחנו יוצאים לסבב Seed של $2M כדי להיכנס לשוק האמריקאי.
+אם את נתקלת במשקיעים או שותפים ש'מדברים את השפה הזו' (של Commerce Tech ו-Real Business) ויכולים להתאים ל-DNA שלנו, אני מאוד אעריך חיבור."`
+                    }
+                ]
+            },
+            fundraising: {
+                intro: 'תוכנית גיוס Seed',
+                steps: [
+                    {
+                        phase: 'שלב 1: הכנות',
+                        duration: 'שבועות 1-3',
+                        icon: 'FileText',
+                        description: 'בניית נכסים.',
+                        tasks: [
+                            'סיום One-Pager (בוצע)',
+                            'הכנת Data Room בסיסי: כולל נתוני שימוש (Retention, Churn) ודוחות כספיים קיימים.',
+                            'בניית מודל פיננסי ל-24 חודשים (איך ה-$2M יהפכו ל-$10M ARR?).',
+                            'הכנת "רשימת הזהב": 30-50 משקיעים רלוונטיים (Commerce Tech, B2B SaaS, Embedded Finance).'
+                        ],
+                        tips: 'משקיעים אוהבים חברות Bootstrap כי הן יעילות. הדגש ב-Data Room צריך להיות על ה-Unit Economics (רווח ללקוח).'
+                    },
+                    {
+                        phase: 'שלב 2: חימום מנועים וטסטים',
+                        duration: 'שבועות 4-6',
+                        icon: 'TrendingUp',
+                        description: 'מתחילים במשקיעים מדרג B/C כדי לחדד את הפיץ\'.',
+                        tasks: [
+                            'קיום 3-5 פגישות עם משקיעים ידידותיים ("לא המטרה הראשית") לקבלת פידבק.',
+                            'חידוד המסר: שיפור המצגת בהתאם לשאלות קשות שעלו.',
+                            'הפעלת הרשת: פנייה ללקוחות מרוצים (גטר) ויועצים (ליאור?) לבקשת חיבורים (Intros).',
+                        ],
+                        tips: 'אל תשרוף את המשקיעים הכי טובים (Tier A) על ההתחלה. תגיע אליהם כשאתה חד.'
+                    },
+                    {
+                        phase: 'שלב 3: הסתערות (Roadshow)',
+                        duration: 'שבועות 7-12',
+                        icon: 'Target',
+                        description: 'פגישות אינטנסיביות עם משקיעי Tier A.',
+                        tasks: [
+                            'שליחת מיילים/לינקדאין לפי התסריטים המוכנים.',
+                            'ניהול משפך (Pipeline): מעקב אחרי כל ליד ב-CRM פשוט.',
+                            'פגישות המשך (Second Date): צלילה למוצר ולמספרים עם השותפים בקרן.',
+                        ],
+                        tips: 'ההבדל בין "מעניין" ל"צ\'ק" הוא FOMO. נסה לרכז פגישות כדי לייצר תחושת דחיפות.'
+                    },
+                    {
+                        phase: 'שלב 4: סגירה (Closing)',
+                        duration: 'שבועות 13-16+',
+                        icon: 'Briefcase',
+                        description: 'Term Sheet, בדיקת נאותות וכסף בבנק.',
+                        tasks: [
+                            'משא ומתן על ה-Term Sheet (שווי, שליטה, מנגנוני דילול).',
+                            'בדיקת נאותות (Due Diligence): טכנולוגית, פיננסית, משפטית.',
+                            'חתימה והעברת כספים.',
+                        ],
+                        tips: 'זה השלב הכי מסוכן. אל תוריד רגל מהגז בניהול העסק עד שהכסף בבנק.'
+                    }
+                ]
+            }
+        };
+
+        // --- English Content (Translated) ---
+        const enContent = {
+            nav: { onepager: 'One-Pager', scripts: 'Pitch Scripts', meeting: 'Meeting', roadmap: 'Roadmap' },
+            onepager: {
+                printBtn: 'Save as PDF / Print',
+                header: {
+                    tagline: 'One System. ONEFLOW 360.',
+                    subTagline: 'The Digital Backbone & 360 Envelope for Product-Selling SMBs',
+                    vision: 'ONEBTN is a digital technology company behind ONEFLOW 360 – a first-of-its-kind operating system serving as a digital backbone and 360-degree envelope for product-selling businesses. The platform unifies sales, orders, logistics, finance, marketing, mailing, and data into one place, turning the business into a smart, automated "Data Factory".',
+                },
+                problem: { title: 'The Problem: Operational Chaos', points: ['Fragmented Stack: 2-8 separate apps per workflow', 'Data Silos: No single source of truth', 'High Costs: Expensive integration and maintenance', 'No Scale: Manual processes kill growth'] },
+                solution: { title: 'The Solution: ONEFLOW 360', subtitle: 'Unified Business OS & 360 Envelope', points: ['Digital backbone for logistics, sales, orders, data & management', '10 Native Modules (CRM, Shipping, Picking, BI)', 'Vendor-Neutral ERP Integration', 'Hybrid Ready: Supports B2B & B2C simultaneously'] },
+                innovation: { 
+                    title: 'Innovation & Growth Engines', 
+                    points: [
+                        {icon: 'Zap', text: 'Autonomous Setup (Self-Onboarding): Smart wizard allowing businesses and implementers to set up the system independently, with zero dev dependency. Key to global scale.'},
+                        {icon: 'Cpu', text: 'Embedded AI (AI Ops): AI engines integrated into the core for demand prediction, inventory optimization, and smart purchasing recommendations.'},
+                        {icon: 'Network', text: 'Business Network: Unique vertical integration between clients (Supplier-Retailer). Shared catalogs and real-time inventory sync.'},
+                        {icon: 'Globe', text: 'Star Center: A business network connecting businesses and generating global insights for ONEBTN.'}
+                    ] 
+                },
+                businessModel: { title: 'Business Model', setup: 'Setup Fee: $150 - $25,000', saas: 'Monthly SaaS: $150 - $2,000+', highlight: 'Growth Model: Clients pay as they scale.' },
+                market: { title: 'Market Opportunity', tam: '2.5M Businesses', tamDesc: 'US + IL Product Sellers', sam: '1.8M Businesses', samDesc: 'High volume, multi-system', growth: '17% CAGR', growthDesc: 'Cloud adoption growth' },
+                financials: { title: 'Revenue Projection (M$)', subtitle: '2031 Target: $12M Revenue', stats: [{ label: '2031 Clients', value: '1,100+' }, { label: 'Client Savings', value: '30%' }] },
+                traction: { title: 'Traction & Clients', subtitle: 'Over 55 Active Clients', points: ['Getter Group: 10 companies contract, 30% efficiency boost.', 'Pizza Market: 170 daily orders, saved 2 FTEs.', 'Domicile: 400 daily orders, -35% error rate.'] },
+                competition: { title: 'Competitive Edge', competitors: 'vs. Comax, Pepperi, Softsolutions:', differentiators: ['Unified Core: All layers connected at base', 'Vendor Neutral: No ERP lock-in', 'Network Effect: Cross-client business connection', 'B2B/B2C Native: One platform for all'] },
+                roadmap: { title: 'Roadmap', steps: [{ year: '2026', text: 'SaaS Core, Autonomous Setup, AI Demand Prediction' }, { year: '2027', text: 'Secure Comms, ERP Phase 1' }, { year: '2028', text: 'AI Tool Expansion, Sales Optimization' }, { year: '2029', text: 'Global Marketplace' }] },
+                partners: { 
+                    title: 'Partner & Implementer Program (Force Multiplier)', 
+                    points: [
+                        'Strategic ecosystem of distributors and resellers for rapid market entry.',
+                        'Implementer Layer: Training certified tech experts to manage, deploy, and support end clients independently.',
+                        'PRO Version for Implementers: Dedicated system with cross-client CRM for full portfolio management.'
+                    ] 
+                },
+                scale: {
+                    title: 'Growth Engines & Upsell (ARPU Growth)',
+                    points: [
+                        {icon: 'Zap', text: 'Module Marketplace: One-click expansion and instant activation of paid features.'},
+                        {icon: 'Database', text: 'Data Services (DaaS): Monetization of deep insights and AI analytics.'},
+                        {icon: 'LayoutGrid', text: 'Design Store: Selling premium themes and advanced branding.'},
+                        {icon: 'TrendingUp', text: 'Usage Expansion: Pricing model that grows with users and branches.'}
+                    ]
+                },
+                team: { 
+                    title: 'Leadership Team', 
+                    members: [
+                        { name: 'Moshik Cohen', role: 'CEO', desc: 'Former Head of ARCserve Israel (under CA Technologies). Led customer programs at the National Digital Authority and managed national-scale projects.', img: 'moshik.png' }, 
+                        { name: 'Assaf Cohen', role: 'CTO', desc: '15 yrs designing and building large-scale, data-driven platforms; owns product roadmap, security and scalability.', img: 'assaf.png' }, 
+                        { name: 'Adir Cohen', role: 'VP R&D', desc: '10 yrs Full-Stack experience; leads development, implementation and user-experience.', img: 'adir.png' }
+                    ] 
+                },
+                ask: { title: 'Investment Opportunity', amount: '$2M Seed', use: '50% US Market Entry | 50% R&D', contact: 'Moshik Cohen | +972-52-6626619 | Moshe@onebutton.co.il' }
+            },
+            scripts: {
+                intro: 'Tailored Cold Outreach Scripts',
+                types: {
+                    email_lior: '🔥 Message to Morning CEO',
+                    email_short: 'Cold Email (Short)',
+                    email_story: 'Cold Email (Story)',
+                    linkedin: 'LinkedIn Note',
+                    pitch: 'Phone Pitch'
+                },
+                content: {
+                    email_lior: {
+                        subject: "Subject: The transition from 'Green Invoice' to Morning (Founder consultation)",
+                        body: `Hi Lior,\n\nNice to meet you, I'm Moshik Cohen, CEO and Co-founder of ONEBTN.\n\nI've been following your evolution with great appreciation - the shift from a point solution ("Green Invoice") to a holistic platform managing the freelancer ("Morning"). It's a strategic move I'm learning a lot from.\n\nWe are currently building what I perceive as the "Morning" for product-selling businesses (retailers/wholesalers). Instead of these businesses working with 2-8 disconnected systems, we built them one Operating System (Unified OS) that connects everything into one smart flow.\n\nAnother point of similarity (and personally important to me) is our DNA: We are a fully Bootstrapped company. Just like your story, we built the technology with our own 10 fingers, grew from the field and from real customer revenue.\n\nNow, as we stand before the next leap (Scale and first funding for expansion), I would love to steal 15 minutes of your time for a short chat (Zoom or coffee 😊).\n\nThe goal is to hear an insight or two from you about the balance between "stable growth" (without choking cash flow) and the need for external funding to become a major platform.\n\nIs this something that could work for you?\n\nThanks a lot,\nMoshik`
+                    },
+                    email_short: {
+                        subject: 'Subject: B2B Tech Opportunity: The "Waze" for Business Ops',
+                        body: `Hi [Investor Name],\n\nI’ve been following your investments in [Sector] and thought this would align with your thesis.\n\nI’m Moshik, CEO of ONEBTN. We are solving the "Integration Hell" for product-selling businesses. Instead of 5-8 disconnected tools, we built ONEFLOW 360 – a single backbone managing everything (B2B, B2C, Logistics, CRM).\n\nWe are live with major players like Getter Group, driving 30% labor savings, and aiming for $12M revenue within 5 years.\n\nWe are raising a $2M Seed round to enter the US market. Would you be open to a brief 10-minute call?\n\nBest,\nMoshik Cohen, CEO`
+                    },
+                    email_story: {
+                        subject: 'Subject: The Digital Backbone for Supply Chain (Proven Traction)',
+                        body: `Hi [Investor Name],\n\nMost businesses today operate like a Frankenstein monster—CRM head, Ordering arms, Shipping legs—none of it truly connected.\n\nAt ONEBTN, we built the new digital backbone. ONEFLOW 360 turns businesses from a "collection of tools" into a "smart data factory."\n\nThe metrics are solid:\n- 2.5M target companies (US + Israel).\n- Clients seeing +20% sales uplift and -35% error reduction.\n- Organic growth model.\n\nI'd love to share our roadmap to $12M revenue by 2031. How does your calendar look?\n\nBest,\nMoshik Cohen, CEO`
+                    },
+                    linkedin: {
+                        body: `Hi [Name],\nSaw your work in [Sector]. I'm Moshik from ONEBTN. We're building the ultimate unified operating system for B2B/B2C (proven with Getter Group). Raising $2M for US expansion. Would love to connect.`
+                    },
+                    pitch: {
+                        body: `(Opener): Hi [Name], this is Moshik from ONEBTN. Did I catch you at a good time?\n\n(Hook): Great. We built a platform that does for businesses what Waze did for drivers. We unify all operations—sales, inventory, shipping—into one intelligent flow.\n\n(Traction): We're already running with major clients like Getter Group, saving them 30% in costs, and we're raising $2M to replicate this in the US.\n\n(Ask): I'd love to grab a 15 min coffee or Zoom. Are you free next Tuesday?`
+                    }
+                }
+            },
+            meeting: {
+                title: 'Meeting Script: Lior (Morning)',
+                subtitle: 'Goal: Consultation on Bootstrapping & Cash Flow',
+                sections: [
+                    {
+                        title: '1. Opening & Framing (2 mins)',
+                        content: `"Lior, thanks again. I know your time is valuable.\nToday at ONEBTN, we are exactly where you were a few years ago: working product, paying clients, and zero external investment. Bootstrapped from home.\nWe are facing the big leap (Scale to US), and my biggest dilemma is 'Oxygen' - how to grow without suffocating."`
+                    },
+                    {
+                        title: '2. Core Questions (10 mins)',
+                        questions: [
+                            {
+                                q: 'The Bootstrap Trap',
+                                text: `"We are debating between slow, safe growth (from profits) vs. raising money to run fast.\nDuring the 'Green Invoice' era, did you have phases where you felt 'choked' by organic growth?\nHow did you know when was the right moment to bring external money to not miss the market, vs. when to continue alone to keep control?"`
+                            },
+                            {
+                                q: 'Managing Runway',
+                                text: `"When you built the transition to Morning (which required heavy dev before new revenue), how did you manage the risk?\nDid you use current profits to fund the new dev (which slowed you down), or did you take a calculated bet?"`
+                            },
+                            {
+                                q: 'Preserving DNA',
+                                text: `"My fear is that bringing investors at this stage will change the company DNA from building a 'real product' to chasing 'investor metrics'. How did you keep your culture during growth?"`
+                            }
+                        ]
+                    },
+                    {
+                        title: '3. Closing & Indirect Ask (3 mins)',
+                        content: `"I took a lot from this. It helps me organize my thoughts before raising.\nI don't want to take more time.\nI'll just mention we are launching a $2M Seed round for US entry.\nIf you come across investors or partners who 'speak this language' (Commerce Tech & Real Business) and fit our DNA, I'd appreciate a connection."`
+                    }
+                ]
+            },
+            fundraising: {
+                intro: 'Seed Fundraising Plan',
+                steps: [
+                    {
+                        phase: 'Phase 1: Preparation',
+                        duration: 'Weeks 1-3',
+                        icon: 'FileText',
+                        description: 'Asset creation ensuring zero wait time for investors.',
+                        tasks: [
+                            'Finalize One-Pager (Done)',
+                            'Basic Data Room: Usage metrics (Retention, Churn) & Financials.',
+                            'Financial Model for 24 months (Use of proceeds).',
+                            'Build Target List: 30-50 relevant VCs (Commerce Tech, B2B SaaS, Embedded Finance).'
+                        ],
+                        tips: 'Investors love bootstrapped efficiency. Highlight Unit Economics.'
+                    },
+                    {
+                        phase: 'Phase 2: Warm-up & Testing',
+                        duration: 'Weeks 4-6',
+                        icon: 'TrendingUp',
+                        description: 'Start with Tier B/C investors to refine the pitch.',
+                        tasks: [
+                            '3-5 Meetings with friendly investors for feedback.',
+                            'Refine messaging based on tough questions.',
+                            'Activate network: Ask happy clients (Getter) and advisors for intros.',
+                        ],
+                        tips: 'Don\'t burn Tier A investors early. Approach them when sharp.'
+                    },
+                    {
+                        phase: 'Phase 3: Roadshow',
+                        duration: 'Weeks 7-12',
+                        icon: 'Target',
+                        description: 'Intensive meetings with Tier A investors.',
+                        tasks: [
+                            'Cold outreach via scripts.',
+                            'Pipeline Management: Track every lead.',
+                            'Second Dates: Deep dive into product & numbers.',
+                        ],
+                        tips: 'Create FOMO. Cluster meetings to create urgency.'
+                    },
+                    {
+                        phase: 'Phase 4: Closing',
+                        duration: 'Weeks 13-16+',
+                        icon: 'Briefcase',
+                        description: 'Term Sheet, Due Diligence, and Cash.',
+                        tasks: [
+                            'Negotiate Term Sheet.',
+                            'Due Diligence: Tech, Financial, Legal.',
+                            'Signing & Wire transfer.',
+                        ],
+                        tips: 'Most dangerous phase. Keep running the business.'
+                    }
+                ]
+            }
+        };
+
+        const siteContent = { he: heContent, en: enContent };
+
+        // --- Main Components ---
+
+        const OnePager = ({ lang }) => {
+            const t = siteContent[lang].onepager;
+            
+            return (
+                <div className="bg-white text-slate-800 p-8 shadow-2xl max-w-6xl mx-auto rounded-lg relative my-8 main-container" dir={lang === 'he' ? 'rtl' : 'ltr'}>
+                    <button onClick={() => window.print()} className="no-print absolute top-4 left-4 flex items-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 px-3 py-1.5 rounded-full text-xs font-semibold border border-slate-300 z-10" style={{ [lang === 'he' ? 'left' : 'right']: '1.5rem', [lang === 'he' ? 'right' : 'left']: 'auto' }}>
+                        <Icon name="Printer" size={16} /> {t.printBtn}
+                    </button>
+
+                    {/* Header - Added print-flex-row-force class */}
+                    <div className="flex flex-col md:flex-row justify-between items-center border-b-4 border-blue-600 pb-6 mb-6 gap-6 break-inside-avoid print-flex-row-force">
+                        <div className="flex items-center gap-4">
+                            <SafeImage src="onebtn_logo.png" className="w-16 h-16 object-contain rounded-lg border-2 border-slate-200 bg-white" fallback={<div className="w-16 h-16 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black text-xs text-center">LOGO<br/>ONEBTN</div>} />
+                            <div>
+                                <h1 className="text-4xl font-extrabold text-slate-900 leading-none">ONEBTN</h1>
+                                <p className="text-sm text-slate-500 font-bold tracking-widest mt-1">ONE SYSTEM. INFINITE CONTROL.</p>
+                            </div>
+                        </div>
+                        <div className="text-center flex-1 px-4 hidden md:block print-text-start" style={{ display: 'block' }}> 
+                            <h2 className="text-xl md:text-2xl font-bold text-blue-700">{t.header.tagline}</h2>
+                            <p className="text-lg text-slate-600 font-semibold">{t.header.subTagline}</p>
+                        </div>
+                        {/* THE FIX: Added 'print-visible-force' to force override 'hidden' */}
+                        <SafeImage src="oneflow_logo.png" className="hidden md:block w-48 h-auto object-contain print-visible-force" fallback={<div className="hidden md:flex w-24 h-24 bg-blue-100 rounded-full items-center justify-center text-blue-600 font-bold text-sm border border-blue-300 print-flex-force">ONEFLOW<br/>360</div>} />
+                    </div>
+
+                    {/* Vision */}
+                    <div className="bg-slate-50 p-5 rounded-lg border-l-4 border-blue-500 mb-8 text-center md:text-start shadow-sm break-inside-avoid print-text-start">
+                        <p className="text-lg text-slate-700 font-medium italic">"{t.header.vision}"</p>
+                    </div>
+
+                    {/* MAIN GRID - Added print-grid-force class */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 print-grid-force">
+                        
+                        {/* RIGHT COLUMN (First in HTML for RTL): Problem, Solution, Innovation, Competition */}
+                        <div className="space-y-6">
+                            <div className="bg-red-50 p-5 rounded-xl border border-red-100 break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-red-700 font-bold"><Icon name="ShieldCheck" /> {t.problem.title}</div>
+                                <ul className="space-y-2 text-sm text-slate-700">
+                                    {t.problem.points.map((p, i) => <li key={i} className="flex gap-2"><span>•</span>{p}</li>)}
+                                </ul>
+                            </div>
+                            <div className="bg-emerald-50 p-5 rounded-xl border border-emerald-100 break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-emerald-700 font-bold"><Icon name="Layers" /> {t.solution.title}</div>
+                                <p className="text-xs font-bold text-emerald-600 mb-2 uppercase">{t.solution.subtitle}</p>
+                                <ul className="space-y-2 text-sm text-slate-700">
+                                    {t.solution.points.map((p, i) => <li key={i} className="flex gap-2"><Icon name="CheckCircle" className="text-emerald-600" size={14} />{p}</li>)}
+                                </ul>
+                            </div>
+                            <div className="bg-indigo-50 p-5 rounded-xl border border-indigo-100 break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-indigo-800 font-bold"><Icon name="Zap" /> {t.innovation.title}</div>
+                                <ul className="space-y-3 text-sm text-slate-700">
+                                    {t.innovation.points.map((p, i) => (
+                                        <li key={i} className="flex gap-2 items-start">
+                                            <div className="mt-1 text-indigo-600 shrink-0"><Icon name={p.icon} size={16} /></div>
+                                            <span>{p.text}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-orange-600 font-bold"><Icon name="LayoutGrid" /> {t.competition.title}</div>
+                                <div className="text-xs font-semibold text-slate-500 mb-2">{t.competition.competitors}</div>
+                                <ul className="text-sm space-y-2">
+                                    {t.competition.differentiators.map((d, i) => <li key={i} className="flex gap-2"><Icon name="CheckCircle" className="text-orange-500" size={14} />{d}</li>)}
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* MIDDLE COLUMN: Market, Traction, Business Model, Financials, Scale */}
+                        <div className="space-y-6">
+                             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-blue-700 font-bold"><Icon name="Target" /> {t.market.title}</div>
+                                <div className="text-center">
+                                    <div className="text-2xl font-black text-slate-800">{t.market.tam}</div>
+                                    <div className="text-xs text-slate-500">{t.market.tamDesc}</div>
+                                    <div className="mt-2 text-xl font-bold text-emerald-600">{t.market.growth}</div>
+                                </div>
+                            </div>
+                            <div className="bg-blue-50 p-5 rounded-xl border border-blue-200 break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-blue-800 font-bold"><Icon name="TrendingUp" /> {t.traction.title}</div>
+                                <div className="text-xs font-semibold text-blue-600 mb-2 uppercase">{t.traction.subtitle}</div>
+                                <ul className="space-y-2 text-sm text-slate-700">
+                                    {t.traction.points.map((p, i) => <li key={i} className="flex gap-2"><span>•</span>{p}</li>)}
+                                </ul>
+                            </div>
+                            <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-slate-700 font-bold"><Icon name="DollarSign" /> {t.businessModel.title}</div>
+                                <div className="space-y-2 text-sm">
+                                    <div className="flex justify-between border-b pb-1"><span>Setup</span><span>{t.businessModel.setup}</span></div>
+                                    <div className="flex justify-between border-b pb-1"><span>SaaS</span><span>{t.businessModel.saas}</span></div>
+                                    <div className="text-xs text-blue-600 mt-2 font-bold">{t.businessModel.highlight}</div>
+                                </div>
+                            </div>
+                            {/* Financials Moved Here */}
+                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-indigo-700 font-bold"><Icon name="BarChart3" /> {t.financials.title}</div>
+                                <SimpleLineChart data={financialData} />
+                                <div className="text-center bg-indigo-50 p-2 rounded border border-indigo-100 text-indigo-900 font-bold text-sm mt-2">{t.financials.subtitle}</div>
+                            </div>
+                             {/* Scale & Upsell - Moved Here */}
+                            <div className="bg-purple-50 p-5 rounded-xl border border-purple-200 break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-purple-800 font-bold"><Icon name="Rocket" /> {t.scale.title}</div>
+                                <ul className="space-y-2 text-sm text-slate-700">
+                                    {t.scale.points.map((p, i) => (
+                                        <li key={i} className="flex gap-2 items-start">
+                                            <div className="mt-1 text-purple-600 shrink-0"><Icon name={p.icon} size={14} /></div>
+                                            <span className="leading-tight">{p.text}</span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        </div>
+
+                        {/* LEFT COLUMN (Last in HTML): Team, Partners, Roadmap */}
+                        <div className="space-y-6">
+                            {/* Team */}
+                            <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-slate-700 font-bold"><Icon name="Users" /> {t.team.title}</div>
+                                <div className="space-y-4">
+                                    {t.team.members.map((member, i) => (
+                                        <div key={i} className="flex gap-4 items-start">
+                                            <SafeImage src={member.img} className="w-16 h-16 object-cover rounded-full border-2 border-white shadow-md shrink-0" fallback={<div className="w-16 h-16 bg-white border rounded-full flex items-center justify-center font-bold text-slate-500 text-lg shadow-sm shrink-0">{member.name.charAt(0)}</div>} />
+                                            <div>
+                                                <div className="font-bold text-base text-slate-900">{member.name}</div>
+                                                <div className="text-blue-600 font-semibold text-xs mb-1">{member.role}</div>
+                                                <div className="text-[11px] text-slate-500 leading-tight">{member.desc}</div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Partners - Expanded & Sexy */}
+                            <div className="bg-orange-50 p-5 rounded-xl border border-orange-200 break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-orange-800 font-bold"><Icon name="Briefcase" /> {t.partners.title}</div>
+                                <ul className="space-y-2 text-sm text-slate-700">
+                                    {t.partners.points.map((p, i) => <li key={i} className="flex gap-2 items-start"><Icon name="Handshake" className="text-orange-600 shrink-0" size={14} /><span className="leading-tight">{p}</span></li>)}
+                                </ul>
+                            </div>
+
+                            <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm break-inside-avoid">
+                                <div className="flex items-center gap-2 mb-3 text-purple-700 font-bold"><Icon name="Map" /> {t.roadmap.title}</div>
+                                <div className="space-y-3 relative">
+                                    <div className="absolute top-2 bottom-2 w-0.5 bg-slate-100" style={{ [lang === 'he' ? 'right' : 'left']: '19px' }}></div>
+                                    {t.roadmap.steps.map((step, i) => (
+                                        <div key={i} className="flex gap-3 relative z-10 items-center">
+                                            <div className="bg-purple-100 text-purple-700 text-[10px] font-bold px-2 py-1 rounded-full border border-purple-200 w-12 text-center shrink-0">{step.year}</div>
+                                            <div className="text-xs text-slate-600 leading-tight bg-slate-50 p-2 rounded w-full border border-slate-100">{step.text}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Bottom ASK Banner - Added print-flex-row-force */}
+                    <div className="bg-gradient-to-br from-blue-700 to-indigo-900 p-8 rounded-xl text-white shadow-xl relative overflow-hidden break-inside-avoid mt-8">
+                        <div className="absolute top-0 right-0 p-4 opacity-10"><Icon name="Star" size={120} /></div>
+                        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6 print-flex-row-force">
+                            <div>
+                                <h3 className="text-2xl font-bold mb-2 opacity-90">{t.ask.title}</h3>
+                                <div className="text-5xl font-black mb-2 text-yellow-300 tracking-tight">{t.ask.amount}</div>
+                                <div className="text-lg opacity-90 font-light">{t.ask.use}</div>
+                            </div>
+                            <div className="bg-white/10 p-4 rounded-lg backdrop-blur-sm text-sm border border-white/20 min-w-[250px]">
+                                <div className="font-bold text-white mb-2 uppercase tracking-wider text-xs opacity-70">Contact Details</div>
+                                <div className="font-mono text-base">{t.ask.contact}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="text-center mt-8 text-slate-400 text-xs">
+                        &copy; 2026 ONEBTN. All rights reserved. Confidential.
+                    </div>
+                </div>
+            );
+        };
+
+        const ScriptCard = ({ title, body, subject }) => {
+            const [copied, setCopied] = useState(false);
+            const handleCopy = () => {
+                const text = subject ? `${subject}\n\n${body}` : body;
+                navigator.clipboard.writeText(text);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            };
+            return (
+                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden mb-4">
+                    <div className="px-4 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                        <h3 className="font-bold text-sm text-slate-700 flex items-center gap-2"><Icon name="MessageSquare" size={16} /> {title}</h3>
+                        <button onClick={handleCopy} className="flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors bg-white border hover:bg-slate-50 text-slate-600">
+                            {copied ? <span>הועתק!</span> : <span>העתק</span>}
+                        </button>
+                    </div>
+                    <div className="p-5 bg-white text-sm">
+                        {subject && <div className="mb-3 pb-3 border-b border-dashed border-slate-100 font-semibold text-slate-800">{subject}</div>}
+                        <pre className="whitespace-pre-wrap font-sans text-slate-600 leading-relaxed">{body}</pre>
+                    </div>
+                </div>
+            );
+        };
+
+        const MeetingCard = ({ section }) => (
+            <div className="bg-white rounded-lg border border-slate-200 p-5 mb-4 shadow-sm">
+                <h3 className="font-bold text-lg text-slate-800 mb-3 flex items-center gap-2"><Icon name="Mic" size={18} className="text-blue-500" /> {section.title}</h3>
+                {section.content && <div className="bg-slate-50 p-4 rounded text-slate-700 border border-slate-100 italic text-sm leading-relaxed whitespace-pre-wrap">{section.content}</div>}
+                {section.questions && <div className="space-y-4">{section.questions.map((q, i) => <div key={i}><div className="text-sm font-bold text-blue-800 mb-1">{q.q}</div><div className="bg-blue-50/50 p-3 rounded text-slate-700 border border-blue-100 text-sm leading-relaxed">{q.text}</div></div>)}</div>}
+            </div>
+        );
+
+        const RoadmapCard = ({ step }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            return (
+                <div className="bg-white rounded-lg border border-slate-200 mb-4 shadow-sm overflow-hidden">
+                    <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50" onClick={() => setIsOpen(!isOpen)}>
+                        <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isOpen ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'}`}>
+                                <Icon name={step.icon} size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800 text-lg">{step.phase}</h3>
+                                <div className="text-xs font-semibold text-slate-400 uppercase flex items-center gap-1"><Icon name="Clock" size={12} /> {step.duration}</div>
+                            </div>
+                        </div>
+                        <Icon name={isOpen ? "ChevronUp" : "ChevronDown"} size={16} className="text-slate-400"/>
+                    </div>
+                    {isOpen && (
+                        <div className="p-4 pt-0 border-t border-slate-100 bg-slate-50/50">
+                            <p className="text-sm text-slate-600 mb-4 mt-4 font-medium">{step.description}</p>
+                            <div className="mb-4">
+                                <div className="text-xs font-bold text-slate-400 uppercase mb-2">משימות לביצוע:</div>
+                                <ul className="space-y-2">{step.tasks.map((task, i) => <li key={i} className="flex gap-2 text-sm text-slate-700 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>{task}</li>)}</ul>
+                            </div>
+                            <div className="bg-amber-50 border border-amber-100 p-3 rounded text-xs text-amber-800 flex gap-2 items-start"><Icon name="AlertTriangle" size={14} className="mt-0.5 shrink-0" /><span><span className="font-bold">טיפ: </span>{step.tips}</span></div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const App = () => {
+            const [lang, setLang] = useState('he');
+            const [activeTab, setActiveTab] = useState('onepager');
+            const t = siteContent[lang]; 
+            const isRtl = lang === 'he';
+
+            // Add class to body for print targeting if needed
+            useEffect(() => {
+                if(activeTab === 'onepager') {
+                    document.body.classList.add('printing-onepager');
+                } else {
+                    document.body.classList.remove('printing-onepager');
+                }
+            }, [activeTab]);
+
+            return (
+                <div dir={isRtl ? 'rtl' : 'ltr'}>
+                     <ErrorBoundary>
+                        <nav className="bg-slate-900 text-white p-3 shadow-lg sticky top-0 z-50 no-print">
+                            <div className="max-w-6xl mx-auto flex justify-between items-center">
+                                <div className="flex items-center gap-4">
+                                    <div className="font-black text-lg tracking-tighter">ONEBTN</div>
+                                    <div className="h-5 w-px bg-slate-700 mx-2 hidden md:block"></div>
+                                    <div className="flex gap-2 overflow-x-auto">
+                                        <button onClick={() => setActiveTab('onepager')} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${activeTab === 'onepager' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 text-slate-300'}`}>{t.nav.onepager}</button>
+                                        <button onClick={() => setActiveTab('scripts')} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${activeTab === 'scripts' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 text-slate-300'}`}>{t.nav.scripts}</button>
+                                        <button onClick={() => setActiveTab('meeting')} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 whitespace-nowrap ${activeTab === 'meeting' ? 'bg-amber-500 text-white' : 'hover:bg-slate-800 text-amber-400'}`}><Icon name="Coffee" size={12}/>{t.nav.meeting}</button>
+                                        <button onClick={() => setActiveTab('roadmap')} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 whitespace-nowrap ${activeTab === 'roadmap' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-emerald-400'}`}><Icon name="Target" size={12}/>{t.nav.roadmap}</button>
+                                    </div>
+                                </div>
+                                <button onClick={() => setLang(l => l === 'he' ? 'en' : 'he')} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded text-xs border border-slate-700 shrink-0">
+                                    <Icon name="Globe" size={14} /> <span>{lang === 'he' ? 'English' : 'עברית'}</span>
+                                </button>
+                            </div>
+                        </nav>
+
+                        <main className="max-w-6xl mx-auto p-4">
+                            <div className={activeTab === 'onepager' ? 'block active-print' : 'hidden tab-content'}>
+                                <OnePager lang={lang} />
+                            </div>
+
+                            <div className={activeTab === 'scripts' ? 'block max-w-3xl mx-auto tab-content' : 'hidden tab-content'}>
+                                <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg mb-6 text-blue-900 text-sm flex gap-3 items-center"><Icon name="MessageSquare" size={18} className="text-blue-600" /> {t.scripts.intro}</div>
+                                <ScriptCard title={t.scripts.types.email_lior} subject={t.scripts.content.email_lior.subject} body={t.scripts.content.email_lior.body} />
+                                <ScriptCard title={t.scripts.types.email_short} subject={t.scripts.content.email_short.subject} body={t.scripts.content.email_short.body} />
+                                <ScriptCard title={t.scripts.types.email_story} subject={t.scripts.content.email_story.subject} body={t.scripts.content.email_story.body} />
+                                <ScriptCard title={t.scripts.types.linkedin} body={t.scripts.content.linkedin.body} />
+                                <ScriptCard title={t.scripts.types.pitch} body={t.scripts.content.pitch.body} />
+                            </div>
+
+                            <div className={activeTab === 'meeting' ? 'block max-w-3xl mx-auto tab-content' : 'hidden tab-content'}>
+                                <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg mb-6 text-amber-900 text-sm flex gap-3 items-center"><Icon name="Coffee" size={24} className="text-amber-600" /><div><h2 className="font-bold text-lg">{t.meeting.title}</h2><p className="opacity-80">{t.meeting.subtitle}</p></div></div>
+                                {t.meeting.sections.map((s, i) => <MeetingCard key={i} section={s} />)}
+                            </div>
+
+                            <div className={activeTab === 'roadmap' ? 'block max-w-3xl mx-auto tab-content' : 'hidden tab-content'}>
+                                <div className="bg-emerald-50 border border-emerald-200 p-4 rounded-lg mb-6 text-emerald-900 text-sm flex gap-3 items-center"><Icon name="Target" size={24} className="text-emerald-600" /><div><h2 className="font-bold text-lg">{t.fundraising.intro}</h2><p className="opacity-80">תוכנית עבודה לגיוס</p></div></div>
+                                {t.fundraising.steps.map((s, i) => <RoadmapCard key={i} step={s} />)}
+                            </div>
+                        </main>
+                    </ErrorBoundary>
+                </div>
+            );
+        };
+
+        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+    </script>
+</body>
+</html>
