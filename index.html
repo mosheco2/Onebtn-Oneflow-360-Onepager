@@ -32,13 +32,13 @@
                 background-color: white; 
                 -webkit-print-color-adjust: exact; 
                 print-color-adjust: exact; 
-                min-width: 1000px; 
+                width: 100% !important;
+                zoom: 1; 
+                font-size: 11px; 
             }
 
-            /* Hide Navigation and Buttons */
             nav, .no-print { display: none !important; }
             
-            /* Clean up main container */
             main { 
                 padding: 0 !important; 
                 margin: 0 !important; 
@@ -49,43 +49,43 @@
             .main-container {
                 box-shadow: none !important;
                 margin: 0 !important;
-                padding: 10px !important;
+                padding: 0 !important;
                 max-width: 100% !important;
             }
 
-            /* --- FORCE LAYOUT VISIBILITY --- */
-            
-            /* 1. Force Grid for Columns */
+            /* Force Grid Layout */
             .print-grid-force {
                 display: grid !important;
                 grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-                gap: 1.5rem !important; 
+                gap: 0.8rem !important; 
             }
 
-            /* 2. Force Flex Row for Header */
+            /* Header Layout */
             .print-flex-row-force {
                 display: flex !important;
                 flex-direction: row !important;
+                align-items: center !important;
+                padding-bottom: 0.5rem !important;
+                margin-bottom: 0.5rem !important;
             }
 
-            /* 3. FORCE LOGO VISIBILITY */
-            .print-visible-force {
-                display: block !important;
-            }
-            .print-flex-force {
-                display: flex !important;
-            }
+            /* Compact Spacing */
+            .p-5 { padding: 0.6rem !important; }
+            .space-y-6 > :not([hidden]) ~ :not([hidden]) { --tw-space-y-reverse: 0; margin-top: 0.5rem !important; margin-bottom: 0 !important; }
+            
+            /* Text Alignment */
+            .print-text-start { text-align: right !important; }
+            html[dir="ltr"] .print-text-start { text-align: left !important; }
 
-            /* Adjust text alignment for print */
-            .print-text-start {
-                text-align: right !important; /* Assuming RTL */
-            }
-            html[dir="ltr"] .print-text-start {
-                text-align: left !important;
-            }
+            /* Font Sizes Fixes */
+            .text-sm { font-size: 10pt !important; line-height: 1.25 !important; }
+            .text-xs { font-size: 9pt !important; }
+            
+            /* Ensure logo visibility */
+            .print-visible-force { display: block !important; }
+            .print-flex-force { display: flex !important; }
 
-            /* Visual Cleanup */
-            .shadow-2xl, .shadow-sm, .shadow-md { box-shadow: none !important; border: 1px solid #e2e8f0; }
+            .shadow-2xl, .shadow-sm, .shadow-md { box-shadow: none !important; border: 1px solid #cbd5e1; }
             .bg-slate-900 { color: white !important; }
             .break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
             .tab-content:not(.active-print) { display: none; }
@@ -98,37 +98,34 @@
     <script type="text/babel">
         const { useState, useEffect, Component } = React;
 
-        // --- Error Boundary ---
         class ErrorBoundary extends Component {
             constructor(props) {
                 super(props);
-                this.state = { hasError: false, error: null };
+                this.state = { hasError: false };
             }
-            static getDerivedStateFromError(error) { return { hasError: true, error }; }
+            static getDerivedStateFromError(error) { return { hasError: true }; }
             render() {
                 if (this.state.hasError) return <div className="p-10 text-red-600">Something went wrong. Please refresh.</div>;
                 return this.props.children;
             }
         }
 
-        // --- Safe Image Component ---
         const SafeImage = ({ src, alt, className, fallback }) => {
             const [hasError, setHasError] = useState(false);
+            // Reset error state when src changes
+            useEffect(() => {
+                setHasError(false);
+            }, [src]);
+
             if (hasError || !src) return fallback;
             return <img src={src} alt={alt} className={className} onError={() => setHasError(true)} />;
         };
 
-        // --- Data ---
         const financialData = [
-            { year: '2026', rev: 0.25 },
-            { year: '2027', rev: 1.3 },
-            { year: '2028', rev: 3.6 },
-            { year: '2029', rev: 5.4 },
-            { year: '2030', rev: 7.7 },
-            { year: '2031', rev: 12 },
+            { year: '2026', rev: 0.25 }, { year: '2027', rev: 1.3 }, { year: '2028', rev: 3.6 },
+            { year: '2029', rev: 5.4 }, { year: '2030', rev: 7.7 }, { year: '2031', rev: 12 }
         ];
 
-        // --- Icons ---
         const icons = {
             Globe: <path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 0 1 9-9" />,
             CheckCircle: <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4 12 14.01l-3-3" />,
@@ -156,7 +153,8 @@
             ChevronUp: <path d="m18 15-6-6-6 6" />,
             Handshake: <g><path d="m19 11-6-6-6 6"/><path d="m5 19 6-6 6 6"/><path d="M2 12h20"/><path d="M2 19h20"/></g>,
             Database: <g><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></g>,
-            Rocket: <g><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.48-.56.63-1.28.63-1.28l9-9c2.63-2.61 3.5-5.8 3.87-7.22a.5.5 0 0 0-.62-.62c-1.42.37-4.61 1.24-7.22 3.87l-9 9c0 .01-.72.16-1.28.64Z"/><path d="m12 15 2 2"/><path d="m5 2 5 5"/></g>
+            Rocket: <g><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.48-.56.63-1.28.63-1.28l9-9c2.63-2.61 3.5-5.8 3.87-7.22a.5.5 0 0 0-.62-.62c-1.42.37-4.61 1.24-7.22 3.87l-9 9c0 .01-.72.16-1.28.64Z"/><path d="m12 15 2 2"/><path d="m5 2 5 5"/></g>,
+            FileText: <g><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></g>
         };
 
         const Icon = ({ name, size = 20, className = "" }) => (
@@ -165,14 +163,8 @@
             </svg>
         );
 
-        // --- Simple Line Chart ---
         const SimpleLineChart = ({ data }) => {
-            const points = data.map((d, i) => {
-                const x = i * 60 + 10;
-                const y = 100 - (d.rev * (80/12)) - 10;
-                return `${x},${y}`;
-            }).join(' ');
-
+            const points = data.map((d, i) => `${i * 60 + 10},${100 - (d.rev * (80/12)) - 10}`).join(' ');
             return (
                 <div className="w-full h-32 bg-white relative">
                     <svg viewBox="0 0 320 120" className="w-full h-full overflow-visible">
@@ -180,8 +172,7 @@
                         <line x1="0" y1="50" x2="320" y2="50" stroke="#e2e8f0" strokeWidth="1" strokeDasharray="4" />
                         <polyline fill="none" stroke="#2563eb" strokeWidth="3" points={points} />
                         {data.map((d, i) => {
-                            const x = i * 60 + 10;
-                            const y = 100 - (d.rev * (80/12)) - 10;
+                            const x = i * 60 + 10, y = 100 - (d.rev * (80/12)) - 10;
                             return (
                                 <g key={i}>
                                     <circle cx={x} cy={y} r="4" fill="#2563eb" stroke="white" strokeWidth="2" />
@@ -195,7 +186,6 @@
             );
         };
 
-        // --- Hebrew Content ---
         const heContent = {
             nav: { onepager: 'One-Pager', scripts: 'תסריטי פנייה', meeting: 'פגישת ליאור', roadmap: 'תוכנית גיוס' },
             onepager: {
@@ -221,7 +211,7 @@
                 market: { title: 'שוק ופוטנציאל', tam: '$2.5M עסקים', tamDesc: 'B2B/B2C בארה"ב וישראל', sam: '1.8M עסקים', samDesc: 'עם ריבוי מערכות ונפח גבוה', growth: '17% CAGR', growthDesc: 'צמיחה שנתית באימוץ ענן' },
                 financials: { title: 'תחזית הכנסות (M$)', subtitle: 'יעד 2031: $12M הכנסות', stats: [{ label: 'לקוחות יעד 2031', value: '1,100+' }, { label: 'חסכון ללקוח', value: '30%' }] },
                 traction: { title: 'לקוחות ו-Traction', subtitle: 'מעל 55 לקוחות פעילים', points: ['קבוצת גטר (יבואן ארצי): חוזה ל-10 חברות, התייעלות של 30%.', 'פיצה מרקט (ספק ארצי): 170 הזמנות ביום, חיסכון של 2 משרות.', 'דומיסיל (יבואן ארצי): 400 הזמנות ביום, ירידה של 35% בשגיאות.'] },
-                competition: { title: 'יתרון תחרותי', competitors: 'מול Comax, Pepperi, Softsolutions:', differentiators: ['Unified Core: כל השכבות מחוברות בבסיס', 'Vendor Neutral: לא נועל את הלקוח ל-ERP מסוים', 'Network Effect: חיבור עסקי בין לקוחות', 'B2B/B2C Native: פלטפורמה אחת לשני העולמות'] },
+                competition: { title: 'יתרון תחרותי', competitors: 'מול Comax, Pepperi, Softsolutions:', differentiators: ['Unified Core: כל השכבות מחוברות בבסיס', 'Vendor Neutral: No ERP lock-in', 'Network Effect: חיבור עסקי בין לקוחות', 'B2B/B2C Native: פלטפורמה אחת לשני העולמות'] },
                 roadmap: { title: 'מפת דרכים', steps: [{ year: '2026', text: 'SaaS Core, הקמה אוטונומית, AI חיזוי ביקושים' }, { year: '2027', text: 'מודול תקשורת מוצפן, ERP שלב 1' }, { year: '2028', text: 'הרחבת כלי AI, אופטימיזציה למכירות' }, { year: '2029', text: 'מרקטפלייס B2B גלובלי' }] },
                 partners: { 
                     title: 'תוכנית שותפים ומיישמים (Force Multiplier)', 
@@ -255,180 +245,48 @@
             },
             scripts: {
                 intro: 'תסריטי פנייה מותאמים אישית למשקיעים ושותפים',
-                types: {
-                    email_lior: '🔥 פנייה למנכ"לית Morning',
-                    email_short: 'מייל קר (קצר)',
-                    email_story: 'מייל "סיפור"',
-                    linkedin: 'הודעת לינקדאין',
-                    pitch: 'פיץ\' טלפוני'
-                },
+                types: { email_lior: '🔥 פנייה למנכ"לית Morning', email_short: 'מייל קר (קצר)', email_story: 'מייל "סיפור"', linkedin: 'הודעת לינקדאין', pitch: 'פיץ\' טלפוני' },
                 content: {
                     email_lior: {
                         subject: "המעבר מ'חשבונית ירוקה' ל-Morning (התייעצות יזמית)",
-                        body: `היי ליאור,
-
-נעים מאוד, אני מושיק כהן, המנכ"ל ואחד המייסדים של ONEBTN.
-
-אני עוקב בהערכה רבה אחרי האבולוציה שעשיתם - המעבר מפתרון נקודתי ("חשבונית ירוקה") לפלטפורמה הוליסטית שמנהלת את העצמאי ("Morning"). זהו מהלך אסטרטגי שאני לומד ממנו המון.
-
-אנחנו בונים היום את מה שאני תופס כ"Morning" של העסקים שמוכרים מוצרים (קמעונאים/סיטונאים).
-במקום שהעסקים האלו יעבדו עם 2-8 מערכות מנותקות, בנינו להם מערכת הפעלה אחת (Unified OS) שמחברת את הכל לזרימה אחת חכמה.
-
-נקודת דמיון נוספת (וחשובה לי אישית) היא ה-DNA שלנו: אנחנו חברת בוטסטראפ מלאה.
-בדיוק כמו בסיפור שלכם, בנינו את הטכנולוגיה ב-10 אצבעות, צמחנו מתוך השטח ומתוך הכנסות של לקוחות אמיתיים.
-
-כעת, כשאנחנו עומדים לפני הקפיצה הבאה (Scale וגיוס ראשון להתרחבות), אשמח מאוד לגנוב לך 15 דקות לשיחה קצרה (בזום או עם כוס קפה 😊).
-
-המטרה היא לשמוע ממך תובנה או שתיים על האיזון שבין "גדילה יציבה" (בלי להיחנק תזרימית) לבין הצורך במימון חיצוני כדי להפוך לפלטפורמה גדולה.
-
-האם זה משהו שיכול להסתדר לך?
-
-תודה רבה,
-מושיק`
+                        body: `היי ליאור,\n\nנעים מאוד, אני מושיק כהן, המנכ"ל ואחד המייסדים של ONEBTN.\n\nאני עוקב בהערכה רבה אחרי האבולוציה שעשיתם - המעבר מפתרון נקודתי ("חשבונית ירוקה") לפלטפורמה הוליסטית שמנהלת את העצמאי ("Morning"). זהו מהלך אסטרטגי שאני לומד ממנו המון.\n\nאנחנו בונים היום את מה שאני תופס כ"Morning" של העסקים שמוכרים מוצרים (קמעונאים/סיטונאים). במקום שהעסקים האלו יעבדו עם 2-8 מערכות מנותקות, בנינו להם מערכת הפעלה אחת (Unified OS) שמחברת את הכל לזרימה אחת חכמה.\n\nנקודת דמיון נוספת (וחשובה לי אישית) היא ה-DNA שלנו: אנחנו חברת בוטסטראפ מלאה. בדיוק כמו בסיפור שלכם, בנינו את הטכנולוגיה ב-10 אצבעות, צמחנו מתוך השטח ומתוך הכנסות של לקוחות אמיתיים.\n\nכעת, כשאנחנו עומדים לפני הקפיצה הבאה (Scale וגיוס ראשון להתרחבות), אשמח מאוד לגנוב לך 15 דקות לשיחה קצרה (בזום או עם כוס קפה 😊).\n\nהמטרה היא לשמוע ממך תובנה או שתיים על האיזון שבין "גדילה יציבה" (בלי להיחנק תזרימית) לבין הצורך במימון חיצוני כדי להפוך לפלטפורמה גדולה.\n\nהאם זה משהו שיכול להסתדר לך?\n\nתודה רבה,\nמושיק`
                     },
                     email_short: {
                         subject: 'נושא: הזדמנות ב-B2B Tech: להפוך עסקים ל-Waze של התפעול',
-                        body: `היי [שם המשקיע],
-
-אני עוקב אחרי ההשקעות שלכם ב-[תחום רלוונטי] וחשבתי שזה יעניין אותך.
-
-אני מושיק, המנכ"ל של ONEBTN. אנחנו פותרים את הכאב הכי גדול של עסקים שמוכרים מוצרים: "גיהנום האינטגרציות". במקום 5-8 מערכות נפרדות, בנינו את ONEFLOW 360 - פלטפורמה אחת שמנהלת הכל (B2B, B2C, לוגיסטיקה, CRM).
-
-אנחנו כבר עובדים עם שחקנים גדולים כמו קבוצת גטר ופיצה מרקט, מציגים חסכון של 30% בעלויות עבודה, ומכוונים ל-ARR של $12M תוך 5 שנים.
-
-אנו מגייסים $2M לחדירה לשוק האמריקאי. אשמח לשיחה קצרה של 10 דקות.
-
-בברכה,
-מושיק כהן, CEO`
+                        body: `היי [שם המשקיע],\n\nאני עוקב אחרי ההשקעות שלכם ב-[תחום רלוונטי] וחשבתי שזה יעניין אותך.\n\nאני מושיק, המנכ"ל של ONEBTN. אנחנו פותרים את הכאב הכי גדול של עסקים שמוכרים מוצרים: "גיהנום האינטגרציות". במקום 5-8 מערכות נפרדות, בנינו את ONEFLOW 360 - פלטפורמה אחת שמנהלת הכל (B2B, B2C, לוגיסטיקה, CRM).\n\nאנחנו כבר עובדים עם שחקנים גדולים כמו קבוצת גטר ופיצה מרקט, מציגים חסכון של 30% בעלויות עבודה, ומכוונים ל-ARR של $12M תוך 5 שנים.\n\nאנו מגייסים $2M לחדירה לשוק האמריקאי. אשמח לשיחה קצרה של 10 דקות.\n\nבברכה,\nמושיק כהן, CEO`
                     },
                     email_story: {
                         subject: 'נושא: הדור הבא של הניהול העסקי (כבר מוכח בשטח)',
-                        body: `היי [שם המשקיע],
-
-רוב העסקים היום מתנהלים כמו "פרנקנשטיין" - ראש של CRM, ידיים של מערכת הזמנות ורגליים של שילוח. שום דבר לא מחובר באמת.
-
-ב-ONEBTN בנינו את עמוד השדרה הדיגיטלי החדש. המערכת שלנו, ONEFLOW 360, הופכת עסקים מ"אוסף כלים" ל"מפעל נתונים חכם".
-
-המספרים מדברים:
-- שוק של 2.5 מיליון עסקים (ישראל + ארה"ב).
-- לקוחות (כמו קבוצת גטר) חווים ירידה של 35% בטעויות ועלייה של 20% במכירות.
-- מודל צמיחה אורגני.
-
-אשמח לשתף אותך בתוכנית להגיע ל-$12M הכנסות עד 2031. מתי נוח לך לדבר?
-
-מושיק כהן, CEO`
+                        body: `היי [שם המשקיע],\n\nרוב העסקים היום מתנהלים כמו "פרנקנשטיין" - ראש של CRM, ידיים של מערכת הזמנות ורגליים של שילוח. שום דבר לא מחובר באמת.\n\nב-ONEBTN בנינו את עמוד השדרה הדיגיטלי החדש. המערכת שלנו, ONEFLOW 360, הופכת עסקים מ"אוסף כלים" ל"מפעל נתונים חכם".\n\nהמספרים מדברים:\n- שוק של 2.5 מיליון עסקים (ישראל + ארה"ב).\n- לקוחות (כמו קבוצת גטר) חווים ירידה של 35% בטעויות ועלייה של 20% במכירות.\n- מודל צמיחה אורגני.\n\nאשמח לשתף אותך בתוכנית להגיע ל-$12M הכנסות עד 2031. מתי נוח לך לדבר?\n\nמושיק כהן, CEO`
                     },
-                    linkedin: {
-                        body: `היי [שם],
-ראיתי את הפעילות שלך ב-[תחום]. אני מושיק מ-ONEBTN. אנחנו בונים את מערכת ההפעלה האולטימטיבית לעסקים (לקוחות כמו קבוצת גטר כבר בפנים). מגייסים $2M לצמיחה בארה"ב. אשמח להתחבר.`
-                    },
-                    pitch: {
-                        body: `(פתיחה): היי [שם], זה מושיק מ-ONEBTN. תפסתי אותך בזמן טוב?
-
-(הוק): מעולה. פיתחנו פלטפורמה שעושה לעסקים מה ש-Waze עשתה לנהגים. אנחנו מחברים מכירות, מלאי ושילוח למערכת אחת חכמה.
-
-(טרקשן): אנחנו כבר רצים עם לקוחות ענק כמו קבוצת גטר, חוסכים להם 30% מהעלויות, ומגייסים עכשיו $2M כדי לשכפל את ההצלחה בארה"ב.
-
-(סגירה): הייתי שמח להיפגש לקפה או זום של 15 דקות. איך נראה הלו"ז שלך בשלישי?`
-                    }
+                    linkedin: { body: `היי [שם],\nראיתי את הפעילות שלך ב-[תחום]. אני מושיק מ-ONEBTN. אנחנו בונים את מערכת ההפעלה האולטימטיבית לעסקים (לקוחות כמו קבוצת גטר כבר בפנים). מגייסים $2M לצמיחה בארה"ב. אשמח להתחבר.` },
+                    pitch: { body: `(פתיחה): היי [שם], זה מושיק מ-ONEBTN. תפסתי אותך בזמן טוב?\n\n(הוק): מעולה. פיתחנו פלטפורמה שעושה לעסקים מה ש-Waze עשתה לנהגים. אנחנו מחברים מכירות, מלאי ושילוח למערכת אחת חכמה.\n\n(טרקשן): אנחנו כבר רצים עם לקוחות ענק כמו קבוצת גטר, חוסכים להם 30% מהעלויות, ומגייסים עכשיו $2M כדי לשכפל את ההצלחה בארה"ב.\n\n(סגירה): הייתי שמח להיפגש לקפה או זום של 15 דקות. איך נראה הלו"ז שלך בשלישי?` }
                 }
             },
             meeting: {
                 title: 'תסריט שיחה: ליאור (Morning)',
-                subtitle: 'מטרה: התייעצות על בוטסטראפ וניהול תזרים',
+                subtitle: 'מטרה: התייעצות על בוטסטראפ ותזרים מזומנים',
                 sections: [
-                    {
-                        title: '1. פתיחה ומסגור (2 דקות)',
-                        content: `"ליאור, שוב תודה. אני יודע שהזמן שלך יקר.
-אנחנו היום ב-ONEBTN נמצאים בנקודה שבה הייתם לפני כמה שנים: מוצר עובד, לקוחות משלמים, ו-Zero השקעה חיצונית. הכל מהבית.
-אנחנו עומדים בפני הקפיצה הגדולה (Scale לארה"ב), והדילמה הכי גדולה שלי היא 'החמצן' - איך גדלים בלי להיחנק."`
-                    },
-                    {
-                        title: '2. שאלות הליבה (10 דקות)',
-                        questions: [
-                            {
-                                q: 'מילכוד הבוטסטראפ',
-                                text: `"אנחנו מתלבטים בין גדילה איטית ובטוחה (מרווחים) לבין גיוס כסף כדי לרוץ מהר.
-בתקופה של 'חשבונית ירוקה', היו לכם שלבים שהרגשתם שאתם 'נחנקים' בגלל הצמיחה האורגנית?
-איך ידעתם מתי זה הרגע הנכון להביא כסף חיצוני כדי לא לפספס את השוק, ומתי נכון להמשיך לבד כדי לשמור על השליטה?"`
-                            },
-                            {
-                                q: 'ניהול ה-Runway',
-                                text: `"כשבניתם את המעבר ל-Morning (שהצריך פיתוח כבד לפני הכנסות חדשות), איך ניהלתם את הסיכון?
-האם השתמשתם ברווחים השוטפים כדי לממן את הפיתוח החדש (מה שהאט אתכם), או שלקחתם הימור מחושב?"`
-                            },
-                            {
-                                q: 'שמירה על ה-DNA',
-                                text: `"הפחד שלי הוא שהכנסת משקיעים בשלב הזה תשנה את ה-DNA של החברה מחברה שבונה 'מוצר אמיתי' לחברה שרודפת אחרי 'מדדים למשקיעים'. איך אתם שמרתם על התרבות הארגונית שלכם בתהליך הגדילה?"`
-                            }
-                        ]
-                    },
-                    {
-                        title: '3. סגירה ו-Ask עקיף (3 דקות)',
-                        content: `"לקחתי המון. זה עוזר לי מאוד לסדר את המחשבות לקראת הגיוס.
-אני לא רוצה לגזול עוד זמן.
-רק אגיד שאנחנו יוצאים לסבב Seed של $2M כדי להיכנס לשוק האמריקאי.
-אם את נתקלת במשקיעים או שותפים ש'מדברים את השפה הזו' (של Commerce Tech ו-Real Business) ויכולים להתאים ל-DNA שלנו, אני מאוד אעריך חיבור."`
-                    }
+                    { title: '1. פתיחה ומסגור (2 דקות)', content: `"ליאור, שוב תודה. אני יודע שהזמן שלך יקר.\nהיום ב-ONEBTN אנחנו נמצאים בדיוק בנקודה שבה אתם הייתם לפני כמה שנים: מוצר עובד, לקוחות משלמים, ואפס השקעה חיצונית. בוטסטראפ מהבית.\nאנחנו עומדים לפני הקפיצה הגדולה (Scale לארה"ב), והדילמה הגדולה שלי היא 'חמצן' - איך לגדול בלי להיחנק."` },
+                    { title: '2. שאלות ליבה (10 דקות)', questions: [
+                        { q: 'מלכודת הבוטסטראפ', text: `"אנחנו מתלבטים בין צמיחה איטית ובטוחה (מרווחים) לבין גיוס כסף כדי לרוץ מהר.\nבתקופת 'חשבונית ירוקה', האם היו לכם שלבים שבהם הרגשתם 'חנוקים' מהצמיחה האורגנית?\nאיך ידעת מתי הרגע הנכון להביא כסף חיצוני כדי לא לפספס את השוק, מול מתי להמשיך לבד כדי לשמור על שליטה?"` },
+                        { q: 'ניהול Runway', text: `"כשבניתם את המעבר ל-Morning (שדרש פיתוח כבד לפני הכנסות חדשות), איך ניהלתם את הסיכון?\nהאם השתמשתם ברווחים השוטפים כדי לממן את הפיתוח החדש (מה שהאט אתכם), או שלקחתם הימור מחושב?"` },
+                        { q: 'שמירה על DNA', text: `"החשש שלי הוא שגיוס משקיעים בשלב הזה ישנה את ה-DNA של החברה מבניית 'מוצר אמיתי' למרדף אחרי 'מדדי משקיעים'. איך שמרתם על התרבות שלכם בזמן הצמיחה?"` }
+                    ]},
+                    { title: '3. סגירה ובקשה עקיפה (3 דקות)', content: `"לקחתי מפה המון. זה עוזר לי לסדר את המחשבות לפני הגיוס.\nאני לא רוצה לגזול עוד זמן.\nרק אציין שאנחנו משיקים סבב גיוס Seed של $2M לכניסה לארה"ב.\nאם תיתקלי במשקיעים או שותפים ש'מדברים את השפה הזו' (Commerce Tech & Real Business) ומתאימים ל-DNA שלנו, אעריך מאוד חיבור."` }
                 ]
             },
             fundraising: {
                 intro: 'תוכנית גיוס Seed',
                 steps: [
-                    {
-                        phase: 'שלב 1: הכנות',
-                        duration: 'שבועות 1-3',
-                        icon: 'FileText',
-                        description: 'בניית נכסים.',
-                        tasks: [
-                            'סיום One-Pager (בוצע)',
-                            'הכנת Data Room בסיסי: כולל נתוני שימוש (Retention, Churn) ודוחות כספיים קיימים.',
-                            'בניית מודל פיננסי ל-24 חודשים (איך ה-$2M יהפכו ל-$10M ARR?).',
-                            'הכנת "רשימת הזהב": 30-50 משקיעים רלוונטיים (Commerce Tech, B2B SaaS, Embedded Finance).'
-                        ],
-                        tips: 'משקיעים אוהבים חברות Bootstrap כי הן יעילות. הדגש ב-Data Room צריך להיות על ה-Unit Economics (רווח ללקוח).'
-                    },
-                    {
-                        phase: 'שלב 2: חימום מנועים וטסטים',
-                        duration: 'שבועות 4-6',
-                        icon: 'TrendingUp',
-                        description: 'מתחילים במשקיעים מדרג B/C כדי לחדד את הפיץ\'.',
-                        tasks: [
-                            'קיום 3-5 פגישות עם משקיעים ידידותיים ("לא המטרה הראשית") לקבלת פידבק.',
-                            'חידוד המסר: שיפור המצגת בהתאם לשאלות קשות שעלו.',
-                            'הפעלת הרשת: פנייה ללקוחות מרוצים (גטר) ויועצים (ליאור?) לבקשת חיבורים (Intros).',
-                        ],
-                        tips: 'אל תשרוף את המשקיעים הכי טובים (Tier A) על ההתחלה. תגיע אליהם כשאתה חד.'
-                    },
-                    {
-                        phase: 'שלב 3: הסתערות (Roadshow)',
-                        duration: 'שבועות 7-12',
-                        icon: 'Target',
-                        description: 'פגישות אינטנסיביות עם משקיעי Tier A.',
-                        tasks: [
-                            'שליחת מיילים/לינקדאין לפי התסריטים המוכנים.',
-                            'ניהול משפך (Pipeline): מעקב אחרי כל ליד ב-CRM פשוט.',
-                            'פגישות המשך (Second Date): צלילה למוצר ולמספרים עם השותפים בקרן.',
-                        ],
-                        tips: 'ההבדל בין "מעניין" ל"צ\'ק" הוא FOMO. נסה לרכז פגישות כדי לייצר תחושת דחיפות.'
-                    },
-                    {
-                        phase: 'שלב 4: סגירה (Closing)',
-                        duration: 'שבועות 13-16+',
-                        icon: 'Briefcase',
-                        description: 'Term Sheet, בדיקת נאותות וכסף בבנק.',
-                        tasks: [
-                            'משא ומתן על ה-Term Sheet (שווי, שליטה, מנגנוני דילול).',
-                            'בדיקת נאותות (Due Diligence): טכנולוגית, פיננסית, משפטית.',
-                            'חתימה והעברת כספים.',
-                        ],
-                        tips: 'זה השלב הכי מסוכן. אל תוריד רגל מהגז בניהול העסק עד שהכסף בבנק.'
-                    }
+                    { phase: 'שלב 1: הכנה (שבועות 1-3)', duration: 'שבועות 1-3', icon: 'FileText', description: 'יצירת נכסים והבטחת אפס זמן המתנה למשקיעים.', tasks: ['סגירת One-Pager (בוצע)', 'חדר מידע (Data Room) בסיסי: מדדי שימוש (Retention, Churn) ופיננסים.', 'מודל פיננסי ל-24 חודשים (שימוש בכספי הגיוס).', 'בניית רשימת יעדים: 30-50 קרנות רלוונטיות (Commerce Tech, B2B SaaS, Embedded Finance).'], tips: 'משקיעים אוהבים יעילות של בוטסטראפ. הדגש Unit Economics.' },
+                    { phase: 'שלב 2: חימום ובדיקה (שבועות 4-6)', duration: 'שבועות 4-6', icon: 'TrendingUp', description: 'התחלה עם משקיעים בדרג B/C לחידוד הפיץ\'.', tasks: ['3-5 פגישות עם משקיעים "ידידותיים" לקבלת פידבק.', 'חידוד המסרים בהתבסס על שאלות קשות.', 'הפעלת רשת קשרים: בקשת חיבורים מלקוחות מרוצים (גטר) ויועצים.'], tips: 'אל תשרוף משקיעים מדרג A על ההתחלה. גש אליהם כשהפיץ\' חד.' },
+                    { phase: 'שלב 3: רוד-שואו (שבועות 7-12)', duration: 'שבועות 7-12', icon: 'Target', description: 'פגישות אינטנסיביות עם משקיעים מדרג A.', tasks: ['פנייה יזומה (Cold Outreach) באמצעות התסריטים.', 'ניהול Pipeline: מעקב אחרי כל ליד.', 'פגישות עומק (Second Dates): צלילה למוצר ולמספרים.'], tips: 'יצירת FOMO. נסה לקבץ פגישות כדי לייצר תחושת דחיפות.' },
+                    { phase: 'שלב 4: סגירה (שבועות 13-16+)', duration: 'שבועות 13-16+', icon: 'Briefcase', description: 'Term Sheet, בדיקת נאותות (DD), וכסף בבנק.', tasks: ['משא ומתן על Term Sheet.', 'בדיקת נאותות: טכנולוגית, פיננסית, משפטית.', 'חתימה והעברת כספים.'], tips: 'השלב המסוכן ביותר. המשך לנהל את העסק כרגיל.' }
                 ]
             }
         };
 
-        // --- English Content (Translated) ---
         const enContent = {
             nav: { onepager: 'One-Pager', scripts: 'Pitch Scripts', meeting: 'Meeting', roadmap: 'Roadmap' },
             onepager: {
@@ -488,124 +346,40 @@ This presentation may contain forward-looking statements, including statements r
             },
             scripts: {
                 intro: 'Tailored Cold Outreach Scripts',
-                types: {
-                    email_lior: '🔥 Message to Morning CEO',
-                    email_short: 'Cold Email (Short)',
-                    email_story: 'Cold Email (Story)',
-                    linkedin: 'LinkedIn Note',
-                    pitch: 'Phone Pitch'
-                },
+                types: { email_lior: '🔥 Message to Morning CEO', email_short: 'Cold Email (Short)', email_story: 'Cold Email (Story)', linkedin: 'LinkedIn Note', pitch: 'Phone Pitch' },
                 content: {
                     email_lior: {
                         subject: "Subject: The transition from 'Green Invoice' to Morning (Founder consultation)",
                         body: `Hi Lior,\n\nNice to meet you, I'm Moshik Cohen, CEO and Co-founder of ONEBTN.\n\nI've been following your evolution with great appreciation - the shift from a point solution ("Green Invoice") to a holistic platform managing the freelancer ("Morning"). It's a strategic move I'm learning a lot from.\n\nWe are currently building what I perceive as the "Morning" for product-selling businesses (retailers/wholesalers). Instead of these businesses working with 2-8 disconnected systems, we built them one Operating System (Unified OS) that connects everything into one smart flow.\n\nAnother point of similarity (and personally important to me) is our DNA: We are a fully Bootstrapped company. Just like your story, we built the technology with our own 10 fingers, grew from the field and from real customer revenue.\n\nNow, as we stand before the next leap (Scale and first funding for expansion), I would love to steal 15 minutes of your time for a short chat (Zoom or coffee 😊).\n\nThe goal is to hear an insight or two from you about the balance between "stable growth" (without choking cash flow) and the need for external funding to become a major platform.\n\nIs this something that could work for you?\n\nThanks a lot,\nMoshik`
                     },
-                    email_short: {
-                        subject: 'Subject: B2B Tech Opportunity: The "Waze" for Business Ops',
-                        body: `Hi [Investor Name],\n\nI’ve been following your investments in [Sector] and thought this would align with your thesis.\n\nI’m Moshik, CEO of ONEBTN. We are solving the "Integration Hell" for product-selling businesses. Instead of 5-8 disconnected tools, we built ONEFLOW 360 – a single backbone managing everything (B2B, B2C, Logistics, CRM).\n\nWe are live with major players like Getter Group, driving 30% labor savings, and aiming for $12M revenue within 5 years.\n\nWe are raising a $2M Seed round to enter the US market. Would you be open to a brief 10-minute call?\n\nBest,\nMoshik Cohen, CEO`
-                    },
-                    email_story: {
-                        subject: 'Subject: The Digital Backbone for Supply Chain (Proven Traction)',
-                        body: `Hi [Investor Name],\n\nMost businesses today operate like a Frankenstein monster—CRM head, Ordering arms, Shipping legs—none of it truly connected.\n\nAt ONEBTN, we built the new digital backbone. ONEFLOW 360 turns businesses from a "collection of tools" into a "smart data factory."\n\nThe metrics are solid:\n- 2.5M target companies (US + Israel).\n- Clients seeing +20% sales uplift and -35% error reduction.\n- Organic growth model.\n\nI'd love to share our roadmap to $12M revenue by 2031. How does your calendar look?\n\nBest,\nMoshik Cohen, CEO`
-                    },
-                    linkedin: {
-                        body: `Hi [Name],\nSaw your work in [Sector]. I'm Moshik from ONEBTN. We're building the ultimate unified operating system for B2B/B2C (proven with Getter Group). Raising $2M for US expansion. Would love to connect.`
-                    },
-                    pitch: {
-                        body: `(Opener): Hi [Name], this is Moshik from ONEBTN. Did I catch you at a good time?\n\n(Hook): Great. We built a platform that does for businesses what Waze did for drivers. We unify all operations—sales, inventory, shipping—into one intelligent flow.\n\n(Traction): We're already running with major clients like Getter Group, saving them 30% in costs, and we're raising $2M to replicate this in the US.\n\n(Ask): I'd love to grab a 15 min coffee or Zoom. Are you free next Tuesday?`
-                    }
+                    email_short: { subject: 'Subject: B2B Tech Opportunity: The "Waze" for Business Ops', body: `Hi [Investor Name],\n\nI’ve been following your investments in [Sector] and thought this would align with your thesis.\n\nI’m Moshik, CEO of ONEBTN. We are solving the "Integration Hell" for product-selling businesses. Instead of 5-8 disconnected tools, we built ONEFLOW 360 – a single backbone managing everything (B2B, B2C, Logistics, CRM).\n\nWe are live with major players like Getter Group, driving 30% labor savings, and aiming for $12M revenue within 5 years.\n\nWe are raising a $2M Seed round to enter the US market. Would you be open to a brief 10-minute call?\n\nBest,\nMoshik Cohen, CEO` },
+                    email_story: { subject: 'Subject: The Digital Backbone for Supply Chain (Proven Traction)', body: `Hi [Investor Name],\n\nMost businesses today operate like a Frankenstein monster—CRM head, Ordering arms, Shipping legs—none of it truly connected.\n\nAt ONEBTN, we built the new digital backbone. ONEFLOW 360 turns businesses from a "collection of tools" into a "smart data factory."\n\nThe metrics are solid:\n- 2.5M target companies (US + Israel).\n- Clients seeing +20% sales uplift and -35% error reduction.\n- Organic growth model.\n\nI'd love to share our roadmap to $12M revenue by 2031. How does your calendar look?\n\nBest,\nMoshik Cohen, CEO` },
+                    linkedin: { body: `Hi [Name],\nSaw your work in [Sector]. I'm Moshik from ONEBTN. We're building the ultimate unified operating system for B2B/B2C (proven with Getter Group). Raising $2M for US expansion. Would love to connect.` },
+                    pitch: { body: `(Opener): Hi [Name], this is Moshik from ONEBTN. Did I catch you at a good time?\n\n(Hook): Great. We built a platform that does for businesses what Waze did for drivers. We unify all operations—sales, inventory, shipping—into one intelligent flow.\n\n(Traction): We're already running with major clients like Getter Group, saving them 30% in costs, and we're raising $2M to replicate this in the US.\n\n(Ask): I'd love to grab a 15 min coffee or Zoom. Are you free next Tuesday?` }
                 }
             },
             meeting: {
-                title: 'Meeting Script: Lior (Morning)',
-                subtitle: 'Goal: Consultation on Bootstrapping & Cash Flow',
-                sections: [
-                    {
-                        title: '1. Opening & Framing (2 mins)',
-                        content: `"Lior, thanks again. I know your time is valuable.\nToday at ONEBTN, we are exactly where you were a few years ago: working product, paying clients, and zero external investment. Bootstrapped from home.\nWe are facing the big leap (Scale to US), and my biggest dilemma is 'Oxygen' - how to grow without suffocating."`
-                    },
-                    {
-                        title: '2. Core Questions (10 mins)',
-                        questions: [
-                            {
-                                q: 'The Bootstrap Trap',
-                                text: `"We are debating between slow, safe growth (from profits) vs. raising money to run fast.\nDuring the 'Green Invoice' era, did you have phases where you felt 'choked' by organic growth?\nHow did you know when was the right moment to bring external money to not miss the market, vs. when to continue alone to keep control?"`
-                            },
-                            {
-                                q: 'Managing Runway',
-                                text: `"When you built the transition to Morning (which required heavy dev before new revenue), how did you manage the risk?\nDid you use current profits to fund the new dev (which slowed you down), or did you take a calculated bet?"`
-                            },
-                            {
-                                q: 'Preserving DNA',
-                                text: `"My fear is that bringing investors at this stage will change the company DNA from building a 'real product' to chasing 'investor metrics'. How did you keep your culture during growth?"`
-                            }
-                        ]
-                    },
-                    {
-                        title: '3. Closing & Indirect Ask (3 mins)',
-                        content: `"I took a lot from this. It helps me organize my thoughts before raising.\nI don't want to take more time.\nI'll just mention we are launching a $2M Seed round for US entry.\nIf you come across investors or partners who 'speak this language' (Commerce Tech & Real Business) and fit our DNA, I'd appreciate a connection."`
-                    }
+                title: 'Meeting Script: Lior (Morning)', subtitle: 'Goal: Consultation on Bootstrapping & Cash Flow', sections: [
+                    { title: '1. Opening & Framing (2 mins)', content: `"Lior, thanks again. I know your time is valuable.\nToday at ONEBTN, we are exactly where you were a few years ago: working product, paying clients, and zero external investment. Bootstrapped from home.\nWe are facing the big leap (Scale to US), and my biggest dilemma is 'Oxygen' - how to grow without suffocating."` },
+                    { title: '2. Core Questions (10 mins)', questions: [
+                        { q: 'The Bootstrap Trap', text: `"We are debating between slow, safe growth (from profits) vs. raising money to run fast.\nDuring the 'Green Invoice' era, did you have phases where you felt 'choked' by organic growth?\nHow did you know when was the right moment to bring external money to not miss the market, vs. when to continue alone to keep control?"` },
+                        { q: 'Managing Runway', text: `"When you built the transition to Morning (which required heavy dev before new revenue), how did you manage the risk?\nDid you use current profits to fund the new dev (which slowed you down), or did you take a calculated bet?"` },
+                        { q: 'Preserving DNA', text: `"My fear is that bringing investors at this stage will change the company DNA from building a 'real product' to chasing 'investor metrics'. How did you keep your culture during growth?"` }
+                    ]},
+                    { title: '3. Closing & Indirect Ask (3 mins)', content: `"I took a lot from this. It helps me organize my thoughts before raising.\nI don't want to take more time.\nI'll just mention we are launching a $2M Seed round for US entry.\nIf you come across investors or partners who 'speak this language' (Commerce Tech & Real Business) and fit our DNA, I'd appreciate a connection."` }
                 ]
             },
             fundraising: {
-                intro: 'Seed Fundraising Plan',
-                steps: [
-                    {
-                        phase: 'Phase 1: Preparation',
-                        duration: 'Weeks 1-3',
-                        icon: 'FileText',
-                        description: 'Asset creation ensuring zero wait time for investors.',
-                        tasks: [
-                            'Finalize One-Pager (Done)',
-                            'Basic Data Room: Usage metrics (Retention, Churn) & Financials.',
-                            'Financial Model for 24 months (Use of proceeds).',
-                            'Build Target List: 30-50 relevant VCs (Commerce Tech, B2B SaaS, Embedded Finance).'
-                        ],
-                        tips: 'Investors love bootstrapped efficiency. Highlight Unit Economics.'
-                    },
-                    {
-                        phase: 'Phase 2: Warm-up & Testing',
-                        duration: 'Weeks 4-6',
-                        icon: 'TrendingUp',
-                        description: 'Start with Tier B/C investors to refine the pitch.',
-                        tasks: [
-                            '3-5 Meetings with friendly investors for feedback.',
-                            'Refine messaging based on tough questions.',
-                            'Activate network: Ask happy clients (Getter) and advisors for intros.',
-                        ],
-                        tips: 'Don\'t burn Tier A investors early. Approach them when sharp.'
-                    },
-                    {
-                        phase: 'Phase 3: Roadshow',
-                        duration: 'Weeks 7-12',
-                        icon: 'Target',
-                        description: 'Intensive meetings with Tier A investors.',
-                        tasks: [
-                            'Cold outreach via scripts.',
-                            'Pipeline Management: Track every lead.',
-                            'Second Dates: Deep dive into product & numbers.',
-                        ],
-                        tips: 'Create FOMO. Cluster meetings to create urgency.'
-                    },
-                    {
-                        phase: 'Phase 4: Closing',
-                        duration: 'Weeks 13-16+',
-                        icon: 'Briefcase',
-                        description: 'Term Sheet, Due Diligence, and Cash.',
-                        tasks: [
-                            'Negotiate Term Sheet.',
-                            'Due Diligence: Tech, Financial, Legal.',
-                            'Signing & Wire transfer.',
-                        ],
-                        tips: 'Most dangerous phase. Keep running the business.'
-                    }
+                intro: 'Seed Fundraising Plan', steps: [
+                    { phase: 'Phase 1: Preparation', duration: 'Weeks 1-3', icon: 'FileText', description: 'Asset creation ensuring zero wait time for investors.', tasks: ['Finalize One-Pager (Done)', 'Basic Data Room: Usage metrics (Retention, Churn) & Financials.', 'Financial Model for 24 months (Use of proceeds).', 'Build Target List: 30-50 relevant VCs (Commerce Tech, B2B SaaS, Embedded Finance).'], tips: 'Investors love bootstrapped efficiency. Highlight Unit Economics.' },
+                    { phase: 'Phase 2: Warm-up & Testing', duration: 'Weeks 4-6', icon: 'TrendingUp', description: 'Start with Tier B/C investors to refine the pitch.', tasks: ['3-5 Meetings with friendly investors for feedback.', 'Refine messaging based on tough questions.', 'Activate network: Ask happy clients (Getter) and advisors for intros.'], tips: 'Don\'t burn Tier A investors early. Approach them when sharp.' },
+                    { phase: 'Phase 3: Roadshow', duration: 'Weeks 7-12', icon: 'Target', description: 'Intensive meetings with Tier A investors.', tasks: ['Cold outreach via scripts.', 'Pipeline Management: Track every lead.', 'Second Dates: Deep dive into product & numbers.'], tips: 'Create FOMO. Cluster meetings to create urgency.' },
+                    { phase: 'Phase 4: Closing', duration: 'Weeks 13-16+', icon: 'Briefcase', description: 'Term Sheet, Due Diligence, and Cash.', tasks: ['Negotiate Term Sheet.', 'Due Diligence: Tech, Financial, Legal.', 'Signing & Wire transfer.'], tips: 'Most dangerous phase. Keep running the business.' }
                 ]
             }
         };
 
         const siteContent = { he: heContent, en: enContent };
-
-        // --- Main Components ---
 
         const OnePager = ({ lang }) => {
             const t = siteContent[lang].onepager;
@@ -616,7 +390,6 @@ This presentation may contain forward-looking statements, including statements r
                         <Icon name="Printer" size={16} /> {t.printBtn}
                     </button>
 
-                    {/* Header - Added print-flex-row-force class */}
                     <div className="flex flex-col md:flex-row justify-between items-center border-b-4 border-blue-600 pb-6 mb-6 gap-6 break-inside-avoid print-flex-row-force">
                         <div className="flex items-center gap-4">
                             <SafeImage src="onebtn_logo.png" className="w-16 h-16 object-contain rounded-lg border-2 border-slate-200 bg-white" fallback={<div className="w-16 h-16 bg-slate-900 rounded-lg flex items-center justify-center text-white font-black text-xs text-center">LOGO<br/>ONEBTN</div>} />
@@ -629,26 +402,29 @@ This presentation may contain forward-looking statements, including statements r
                             <h2 className="text-xl md:text-2xl font-bold text-blue-700">{t.header.tagline}</h2>
                             <p className="text-lg text-slate-600 font-semibold">{t.header.subTagline}</p>
                         </div>
-                        {/* THE FIX: Added 'print-visible-force' to force override 'hidden' */}
                         <SafeImage src="oneflow_logo.png" className="hidden md:block w-48 h-auto object-contain print-visible-force" fallback={<div className="hidden md:flex w-24 h-24 bg-blue-100 rounded-full items-center justify-center text-blue-600 font-bold text-sm border border-blue-300 print-flex-force">ONEFLOW<br/>360</div>} />
                     </div>
 
-                    {/* Vision */}
                     <div className="bg-slate-50 p-5 rounded-lg border-l-4 border-blue-500 mb-4 text-center md:text-start shadow-sm break-inside-avoid print-text-start">
                         <p className="text-lg text-slate-700 font-medium italic">"{t.header.vision}"</p>
                     </div>
 
-                    {/* Waze Analogy - NEW SECTION (Placed below Vision) */}
                     <div className="text-center mb-8 px-4 break-inside-avoid">
                          <h3 className="text-xl md:text-2xl font-black text-slate-800 leading-tight">
                             {t.header.wazeAnalogy}
                         </h3>
                     </div>
 
-                    {/* MAIN GRID - Added print-grid-force class */}
+                    <div className="w-full max-w-2xl mx-auto mb-8 break-inside-avoid print-visible-force">
+                        <SafeImage
+                            src={lang === 'he' ? 'ecosystem_infographic.png' : 'ecosystem_infographic_en.png'}
+                            alt="ONEFLOW 360 Ecosystem Infographic"
+                            className="w-full h-auto rounded-xl border border-slate-200 shadow-sm"
+                            fallback={<div className="w-full h-64 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">Infographic Placeholder</div>}
+                        />
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 print-grid-force">
-                        
-                        {/* RIGHT COLUMN (First in HTML for RTL): Problem, Solution, Innovation, Competition */}
                         <div className="space-y-6">
                             <div className="bg-red-50 p-5 rounded-xl border border-red-100 break-inside-avoid">
                                 <div className="flex items-center gap-2 mb-3 text-red-700 font-bold"><Icon name="ShieldCheck" /> {t.problem.title}</div>
@@ -683,7 +459,6 @@ This presentation may contain forward-looking statements, including statements r
                             </div>
                         </div>
 
-                        {/* MIDDLE COLUMN: Market, Traction, Business Model, Financials, Scale */}
                         <div className="space-y-6">
                              <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm break-inside-avoid">
                                 <div className="flex items-center gap-2 mb-3 text-blue-700 font-bold"><Icon name="Target" /> {t.market.title}</div>
@@ -708,14 +483,12 @@ This presentation may contain forward-looking statements, including statements r
                                     <div className="text-xs text-blue-600 mt-2 font-bold">{t.businessModel.highlight}</div>
                                 </div>
                             </div>
-                            {/* Financials Moved Here */}
                             <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm break-inside-avoid">
                                 <div className="flex items-center gap-2 mb-3 text-indigo-700 font-bold"><Icon name="BarChart3" /> {t.financials.title}</div>
                                 <SimpleLineChart data={financialData} />
                                 <div className="text-center bg-indigo-50 p-2 rounded border border-indigo-100 text-indigo-900 font-bold text-sm mt-2">{t.financials.subtitle}</div>
                             </div>
-                             {/* Scale & Upsell - Moved Here */}
-                            <div className="bg-purple-50 p-5 rounded-xl border border-purple-200 break-inside-avoid">
+                             <div className="bg-purple-50 p-5 rounded-xl border border-purple-200 break-inside-avoid">
                                 <div className="flex items-center gap-2 mb-3 text-purple-800 font-bold"><Icon name="Rocket" /> {t.scale.title}</div>
                                 <ul className="space-y-2 text-sm text-slate-700">
                                     {t.scale.points.map((p, i) => (
@@ -728,9 +501,7 @@ This presentation may contain forward-looking statements, including statements r
                             </div>
                         </div>
 
-                        {/* LEFT COLUMN (Last in HTML): Team, Partners, Roadmap */}
                         <div className="space-y-6">
-                            {/* Team */}
                             <div className="bg-slate-50 p-5 rounded-xl border border-slate-200 break-inside-avoid">
                                 <div className="flex items-center gap-2 mb-3 text-slate-700 font-bold"><Icon name="Users" /> {t.team.title}</div>
                                 <div className="space-y-4">
@@ -740,14 +511,13 @@ This presentation may contain forward-looking statements, including statements r
                                             <div>
                                                 <div className="font-bold text-base text-slate-900">{member.name}</div>
                                                 <div className="text-blue-600 font-semibold text-xs mb-1">{member.role}</div>
-                                                <div className="text-[11px] text-slate-500 leading-tight">{member.desc}</div>
+                                                <div className="text-sm text-slate-500 leading-tight team-desc-print">{member.desc}</div>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Partners - Expanded & Sexy */}
                             <div className="bg-orange-50 p-5 rounded-xl border border-orange-200 break-inside-avoid">
                                 <div className="flex items-center gap-2 mb-3 text-orange-800 font-bold"><Icon name="Briefcase" /> {t.partners.title}</div>
                                 <ul className="space-y-2 text-sm text-slate-700">
@@ -770,7 +540,6 @@ This presentation may contain forward-looking statements, including statements r
                         </div>
                     </div>
 
-                    {/* Bottom ASK Banner - Added print-flex-row-force */}
                     <div className="bg-gradient-to-br from-blue-700 to-indigo-900 p-8 rounded-xl text-white shadow-xl relative overflow-hidden break-inside-avoid mt-8">
                         <div className="absolute top-0 right-0 p-4 opacity-10"><Icon name="Star" size={120} /></div>
                         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6 print-flex-row-force">
@@ -786,8 +555,7 @@ This presentation may contain forward-looking statements, including statements r
                         </div>
                     </div>
 
-                    {/* DISCLAIMER */}
-                    <div className="mt-8 pt-4 border-t border-slate-200 text-[10px] text-slate-500 text-justify leading-tight whitespace-pre-line break-inside-avoid">
+                    <div className="mt-8 pt-4 border-t border-slate-200 text-[10px] text-slate-500 text-justify leading-tight whitespace-pre-line break-inside-avoid disclaimer-print">
                         {t.disclaimer}
                     </div>
 
@@ -866,7 +634,6 @@ This presentation may contain forward-looking statements, including statements r
             const t = siteContent[lang]; 
             const isRtl = lang === 'he';
 
-            // Add class to body for print targeting if needed
             useEffect(() => {
                 if(activeTab === 'onepager') {
                     document.body.classList.add('printing-onepager');
