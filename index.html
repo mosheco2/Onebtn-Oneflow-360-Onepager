@@ -24,8 +24,8 @@
         /* --- Print Optimization Fixes --- */
         @media print {
             @page { 
-                size: A4 landscape; 
-                margin: 5mm; 
+                size: A4 portrait; /* Changed to portrait for better newsletter/table fitting */
+                margin: 15mm 10mm; /* Increased top margin to prevent cutting */
             }
 
             body { 
@@ -87,8 +87,21 @@
 
             .shadow-2xl, .shadow-sm, .shadow-md { box-shadow: none !important; border: 1px solid #cbd5e1; }
             .bg-slate-900 { color: white !important; }
+            
+            /* Page Break Utilities */
             .break-inside-avoid { break-inside: avoid; page-break-inside: avoid; }
+            tr { break-inside: avoid; page-break-inside: avoid; } /* Ensure table rows don't split */
+            
             .tab-content:not(.active-print) { display: none; }
+        }
+        
+        /* Custom Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
         }
     </style>
 </head>
@@ -105,14 +118,13 @@
             }
             static getDerivedStateFromError(error) { return { hasError: true }; }
             render() {
-                if (this.state.hasError) return <div className="p-10 text-red-600">Something went wrong. Please refresh.</div>;
+                if (this.state.hasError) return <div className="p-10 text-red-600">משהו השתבש. אנא רענן את העמוד.</div>;
                 return this.props.children;
             }
         }
 
         const SafeImage = ({ src, alt, className, fallback }) => {
             const [hasError, setHasError] = useState(false);
-            // Reset error state when src changes
             useEffect(() => {
                 setHasError(false);
             }, [src]);
@@ -154,7 +166,8 @@
             Handshake: <g><path d="m19 11-6-6-6 6"/><path d="m5 19 6-6 6 6"/><path d="M2 12h20"/><path d="M2 19h20"/></g>,
             Database: <g><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></g>,
             Rocket: <g><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.48-.56.63-1.28.63-1.28l9-9c2.63-2.61 3.5-5.8 3.87-7.22a.5.5 0 0 0-.62-.62c-1.42.37-4.61 1.24-7.22 3.87l-9 9c0 .01-.72.16-1.28.64Z"/><path d="m12 15 2 2"/><path d="m5 2 5 5"/></g>,
-            FileText: <g><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></g>
+            FileText: <g><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></g>,
+            Sparkles: <g><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M3 5h4"/></g>
         };
 
         const Icon = ({ name, size = 20, className = "" }) => (
@@ -187,7 +200,59 @@
         };
 
         const heContent = {
-            nav: { onepager: 'One-Pager', scripts: 'תסריטי פנייה', meeting: 'פגישת ליאור', roadmap: 'תוכנית גיוס' },
+            nav: { onepager: 'One-Pager', scripts: 'תסריטי פנייה', meeting: 'פגישת ליאור', roadmap: 'תוכנית גיוס', newsletter: 'עדכון גרסה (New)' },
+            newsletter: {
+                hero: {
+                    badge: "שחרור גרסה 2.0",
+                    title: "הדור הבא: ONEFLOW 360 PRO",
+                    subtitle: "לקחנו את היסודות היציבים והאמינים של המערכת שאתם מכירים, והעברנו אותה להילוך מהיר. חכמה יותר, מודרנית יותר, ועוצמתית מתמיד.",
+                },
+                intro: "בגרסתו החדשה של המוצר התמקדנו בדבר אחד: לעזור לכם להשיג יותר, בפחות מאמץ. שמרנו על כל היכולות האהובות, אך עטפנו אותן בחוויית שימוש חדשנית ושילבנו כלי AI שמשנים את כללי המשחק.",
+                features: [
+                    {
+                        icon: "LayoutGrid",
+                        title: "חוויית משתמש (UI/UX) שעושה חשק לעבוד",
+                        desc: "עיצבנו מחדש את כל המסכים המרכזיים. פחות קליקים, ניווט אינטואיטיבי, ותצוגה נקייה שמאפשרת לכם ולעובדים שלכם להתרכז במה שחשוב באמת. זמן ההכשרה לעובד חדש נחתך בחצי.",
+                        imgAlt: "תמונה: תצוגת דשבורד חדשנית ונקייה"
+                    },
+                    {
+                        icon: "Cpu",
+                        title: "בינה מלאכותית (AI) שעובדת בשבילכם",
+                        desc: "הוספנו שכבת בינה מלאכותית שלא רק מציגה נתונים, אלא מפיקה תובנות אקטיביות. המערכת יודעת כעת לחזות ביקושים, להתריע על חוסרים במלאי לפני שהם קורים, ולהציע אופטימיזציה אוטומטית למסלולי שילוח.",
+                        imgAlt: "תמונה: מסך אנליטיקה וחיזוי ביקושים חכם"
+                    },
+                    {
+                        icon: "Zap",
+                        title: "ביצועים ומנוע אוטומציות משודרג",
+                        desc: "שדרגנו את התשתית הטכנולוגית. טעינת דוחות וחיפושים במערכת מהירים כעת בעד 60%. בנוסף, הוספנו מנוע אוטומציות ויזואלי המאפשר לכם לחבר בין מודולים שונים (לדוגמה: סגירת הזמנה -> שליחת SMS אוטומטית) ללא שורת קוד אחת.",
+                        imgAlt: "תמונה: כלי יצירת אוטומציות בוויזואליות של Drag & Drop"
+                    }
+                ],
+                comparison: {
+                    title: "הקפיצה הבאה שלכם: מה מקבלים בגרסת ה-PRO?",
+                    headers: ["יכולת", "ONEFLOW (הבסיס היציב)", "ONEFLOW PRO (הדור הבא)"],
+                    rows: [
+                        { feature: "ביצועים ומהירות", old: "ניהול יציב ואמין של הנתונים והפעילות השוטפת.", new: "מנוע מערכת חדש ומהיר במיוחד המאפשר טעינה כמעט מיידית של מסכים ונתונים. עבודה רציפה גם עם עומסים ומידע רב." },
+                        { feature: "ממשק משתמש (UI/UX)", old: "ממשק פונקציונלי ומוכר שעושה את העבודה בצורה מהימנה.", new: "עיצוב חכם, מודרני ונקי המצמצם קליקים, מייעל את זרימת העבודה וחותך את זמני הכשרת העובדים בחצי." },
+                        { feature: "שליטה בתהליכים", old: "שליטה טובה ומוכרת בתהליכי העבודה המרכזיים של העסק.", new: "שליטה מלאה בכל שלבי העבודה. ניהול סטטוסים ברור לכל תהליך, שליטה בהרשאות וזרימת עבודה חלקה בין שלבי המכירה." },
+                        { feature: "אבטחת מידע", old: "הגנה אמינה וסטנדרטית על נתוני העסק ומנגנוני שמירת נתונים.", new: "אבטחת מידע מתקדמת (Enterprise-Grade) עם ניהול הרשאות מדויק. שליטה בגישה לפי תפקיד ושמירה מלאה על שלמות הנתונים." },
+                        { feature: "אוטומציות", old: "הפעלת תהליכים עסקית בטוחה ומבוקרת עם מעורבות אנושית.", new: "מערכת אוטומציות חכמה לניהול תהליכים חוזרים. הפעלת פעולות אוטומטיות לפי סטטוסים וחיסכון משמעותי בזמן עבודה." },
+                        { feature: "מידע בזמן אמת", old: "סנכרון נתונים תקופתי המבטיח את שלמות המידע במערכת.", new: "המערכת מציפה מידע חשוב באופן מיידי - עדכוני מלאי חדשים, שינויי סטטוס וזיהוי הזדמנויות מכירה בזמן אמת." },
+                        { feature: "מעקב יעדים", old: "כלים ייעודיים למעקב אחר נתוני מכירות מרכזיים.", new: "מערכת ניתוח ביצועים מתקדמת. מעקב יעדים פרטני לפי לקוח, סוכן מכירות, מוצר או מותג." },
+                        { feature: "שקיפות ובקרה", old: "זמינות נתונים מלאה הניתנת לאחזור לפי דרישה ברחבי המערכת.", new: "תצוגה ברורה ומרוכזת של כל המידע החשוב במסך אחד - מצב לקוחות, עסקאות והתקדמות תהליכים בלייב." },
+                        { feature: "ניהול משימות", old: "ניהול משימות תפעולי למעקב אחר פעולות נדרשות.", new: "ניהול משימות מובנה כחלק אינטגרלי מהמערכת. מעקב פעילויות, תיעוד התקדמות ושליטה יומיומית טובה יותר." },
+                        { feature: "יעילות עבודה", old: "ביצוע פעולות בצורה סדורה ומובנית שלב אחר שלב.", new: "ייעול משמעותי של תהליכי העבודה. פחות פעולות לביצוע משימות, פחות עבודה ידנית וחיסכון גדול בזמן למשתמשים." },
+                        { feature: "שיתוף פעולה", old: "סביבת עבודה המאפשרת שיתוף מידע בסיסי בין משתמשים.", new: "עבודה משותפת בין צוותים במערכת אחת. גישה מקבילה למידע ושקיפות מלאה בין כלל הגורמים בארגון." },
+                        { feature: "גמישות והתרחבות", old: "מערכת יציבה התומכת בתהליכי הליבה של העסק.", new: "מערכת מודולרית וגמישה במיוחד. התאמה לתהליכי עבודה שונים, הוספת מודולים עתידיים וגדילה יחד עם הארגון." },
+                        { feature: "דוחות ותובנות", old: "הפקת דוחות מצב עדכניים המספקים תמונת מצב תקופתית.", new: "מערכת דוחות מתקדמת וגמישה. ניתוח מגמות מכירה, זיהוי הזדמנויות עסקיות וקבלת החלטות מבוססות נתונים." }
+                    ]
+                },
+                cta: {
+                    title: "מוכנים לעלות שלב?",
+                    subtitle: "הגרסה החדשה זמינה כעת לשדרוג. צוות ההטמעה שלנו זמין ללוות אתכם במעבר החלק.",
+                    button: "צרו קשר לשדרוג המערכת"
+                }
+            },
             onepager: {
                 printBtn: 'שמור כ-PDF / הדפס',
                 header: {
@@ -288,7 +353,59 @@
         };
 
         const enContent = {
-            nav: { onepager: 'One-Pager', scripts: 'Pitch Scripts', meeting: 'Meeting', roadmap: 'Roadmap' },
+            nav: { onepager: 'One-Pager', scripts: 'Pitch Scripts', meeting: 'Meeting', roadmap: 'Roadmap', newsletter: 'Product Update' },
+            newsletter: {
+                hero: {
+                    badge: "RELEASE 2.0",
+                    title: "Meet the Next Generation: ONEFLOW 360 PRO",
+                    subtitle: "We took the solid foundation you already love, and shifted it into high gear. Smarter, modern, and more powerful than ever.",
+                },
+                intro: "In our latest update, we focused on one thing: helping you achieve more with less effort. We kept all the beloved features, but wrapped them in an innovative user experience and integrated game-changing AI tools.",
+                features: [
+                    {
+                        icon: "LayoutGrid",
+                        title: "A User Experience You'll Love",
+                        desc: "We redesigned all main screens. Fewer clicks, intuitive navigation, and a clean interface that lets you focus on what matters. Onboarding time for new employees is cut in half.",
+                        imgAlt: "Image: New clean dashboard view"
+                    },
+                    {
+                        icon: "Cpu",
+                        title: "AI That Works For You",
+                        desc: "We added an AI layer that doesn't just show data, but generates active insights. The system can now predict demand, alert on inventory shortages before they happen, and offer automatic route optimization.",
+                        imgAlt: "Image: Smart analytics and demand forecasting"
+                    },
+                    {
+                        icon: "Zap",
+                        title: "Upgraded Performance & Automation",
+                        desc: "We upgraded our tech stack. Reports and searches are now up to 60% faster. Plus, we added a visual automation engine allowing you to connect modules (e.g., Close Order -> Send SMS) without a single line of code.",
+                        imgAlt: "Image: Drag & drop visual automation builder"
+                    }
+                ],
+                comparison: {
+                    title: "Taking the Leap: What's new in ONEFLOW PRO?",
+                    headers: ["Capability", "ONEFLOW (Classic)", "ONEFLOW PRO (Next-Gen)"],
+                    rows: [
+                        { feature: "Performance & Speed", old: "Stable and reliable data management for ongoing operations.", new: "Ultra-fast new engine enabling near-instant loading of screens and data. Seamless workflow even with massive data volumes." },
+                        { feature: "User Interface", old: "Functional and familiar interface that gets the job done reliably.", new: "Modern and clean UI tailored for daily work. Intuitive screens, fewer clicks for actions, and a highly professional look." },
+                        { feature: "Process Control", old: "Solid control over core business processes.", new: "Full control across all workflow stages. Clear status management, granular permissions, and smooth transitions between sales stages." },
+                        { feature: "Security", old: "Reliable, standard protection for business data.", new: "Advanced Enterprise-Grade security with precise access management. Role-based control and complete data integrity assurance." },
+                        { feature: "Automations", old: "Safe, human-controlled execution of business processes.", new: "Smart automation system for repetitive workflows. Action triggers based on statuses, saving significant manual work hours." },
+                        { feature: "Real-time Data", old: "Periodic data synchronization ensuring system data integrity.", new: "Instant surfacing of critical info: live inventory updates, status changes, and real-time sales opportunity detection." },
+                        { feature: "Goal Tracking", old: "Dedicated tools for tracking main sales metrics.", new: "Advanced performance analytics system. Detailed goal tracking by client, sales agent, product, or brand." },
+                        { feature: "Transparency & Control", old: "Full data availability, retrievable on-demand across the system.", new: "Clear, centralized view of all crucial info in one screen - live statuses of clients, deals, and processes." },
+                        { feature: "Task Management", old: "Operational task management for required actions tracking.", new: "Built-in task management integrated into the core system. Activity tracking, progress logging, and superior daily control." },
+                        { feature: "Work Efficiency", old: "Structured, step-by-step execution of actions.", new: "Significant workflow streamlining. Fewer steps per task, reduced manual labor, and massive time savings for users." },
+                        { feature: "Collaboration", old: "Workspace enabling basic information sharing among users.", new: "Collaborative teamwork within a single system. Parallel data access and total transparency across organizational roles." },
+                        { feature: "Flexibility & Expansion", old: "Stable system supporting the core processes of the business.", new: "Highly modular and flexible system. Adapts to various workflows, allows future module additions, and scales with your organization." },
+                        { feature: "Reports & Insights", old: "Generation of status reports providing a periodic overview.", new: "Advanced and flexible reporting system. Sales trend analysis, business opportunity detection, and data-driven decision making." }
+                    ]
+                },
+                cta: {
+                    title: "Ready to level up?",
+                    subtitle: "The new version is now available for upgrade. Our team is ready to guide you through a seamless transition.",
+                    button: "Contact us to upgrade"
+                }
+            },
             onepager: {
                 printBtn: 'Save as PDF / Print',
                 header: {
@@ -380,6 +497,195 @@ This presentation may contain forward-looking statements, including statements r
         };
 
         const siteContent = { he: heContent, en: enContent };
+
+        const ScriptCard = ({ title, body, subject }) => {
+            const [copied, setCopied] = useState(false);
+            const handleCopy = () => {
+                const text = subject ? `${subject}\n\n${body}` : body;
+                navigator.clipboard.writeText(text);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            };
+            return (
+                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden mb-4">
+                    <div className="px-4 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                        <h3 className="font-bold text-sm text-slate-700 flex items-center gap-2"><Icon name="MessageSquare" size={16} /> {title}</h3>
+                        <button onClick={handleCopy} className="flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors bg-white border hover:bg-slate-50 text-slate-600">
+                            {copied ? <span>הועתק!</span> : <span>העתק</span>}
+                        </button>
+                    </div>
+                    <div className="p-5 bg-white text-sm">
+                        {subject && <div className="mb-3 pb-3 border-b border-dashed border-slate-100 font-semibold text-slate-800">{subject}</div>}
+                        <pre className="whitespace-pre-wrap font-sans text-slate-600 leading-relaxed">{body}</pre>
+                    </div>
+                </div>
+            );
+        };
+
+        const MeetingCard = ({ section }) => (
+            <div className="bg-white rounded-lg border border-slate-200 p-5 mb-4 shadow-sm">
+                <h3 className="font-bold text-lg text-slate-800 mb-3 flex items-center gap-2"><Icon name="Mic" size={18} className="text-blue-500" /> {section.title}</h3>
+                {section.content && <div className="bg-slate-50 p-4 rounded text-slate-700 border border-slate-100 italic text-sm leading-relaxed whitespace-pre-wrap">{section.content}</div>}
+                {section.questions && <div className="space-y-4">{section.questions.map((q, i) => <div key={i}><div className="text-sm font-bold text-blue-800 mb-1">{q.q}</div><div className="bg-blue-50/50 p-3 rounded text-slate-700 border border-blue-100 text-sm leading-relaxed">{q.text}</div></div>)}</div>}
+            </div>
+        );
+
+        const RoadmapCard = ({ step }) => {
+            const [isOpen, setIsOpen] = useState(false);
+            return (
+                <div className="bg-white rounded-lg border border-slate-200 mb-4 shadow-sm overflow-hidden">
+                    <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50" onClick={() => setIsOpen(!isOpen)}>
+                        <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isOpen ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'}`}>
+                                <Icon name={step.icon} size={20} />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-slate-800 text-lg">{step.phase}</h3>
+                                <div className="text-xs font-semibold text-slate-400 uppercase flex items-center gap-1"><Icon name="Clock" size={12} /> {step.duration}</div>
+                            </div>
+                        </div>
+                        <Icon name={isOpen ? "ChevronUp" : "ChevronDown"} size={16} className="text-slate-400"/>
+                    </div>
+                    {isOpen && (
+                        <div className="p-4 pt-0 border-t border-slate-100 bg-slate-50/50">
+                            <p className="text-sm text-slate-600 mb-4 mt-4 font-medium">{step.description}</p>
+                            <div className="mb-4">
+                                <div className="text-xs font-bold text-slate-400 uppercase mb-2">משימות לביצוע:</div>
+                                <ul className="space-y-2">{step.tasks.map((task, i) => <li key={i} className="flex gap-2 text-sm text-slate-700 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>{task}</li>)}</ul>
+                            </div>
+                            <div className="bg-amber-50 border border-amber-100 p-3 rounded text-xs text-amber-800 flex gap-2 items-start"><Icon name="AlertTriangle" size={14} className="mt-0.5 shrink-0" /><span><span className="font-bold">טיפ: </span>{step.tips}</span></div>
+                        </div>
+                    )}
+                </div>
+            );
+        };
+
+        const NewsletterTab = ({ lang }) => {
+            const t = siteContent[lang].newsletter;
+            const isRtl = lang === 'he';
+            
+            return (
+                <div className="max-w-5xl mx-auto space-y-12 animate-fade-in pb-12 relative">
+                    {/* Print Button */}
+                    <div className="no-print flex justify-end mb-4">
+                        <button onClick={() => window.print()} className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-full text-sm font-bold border border-slate-300 shadow-sm transition-all">
+                            <Icon name="Printer" size={18} /> {lang === 'he' ? 'הדפס / שמור כ-PDF' : 'Print / Save as PDF'}
+                        </button>
+                    </div>
+
+                    {/* Hero Section */}
+                    <div className="bg-gradient-to-r from-blue-700 to-indigo-900 rounded-[2rem] p-10 md:p-16 text-white text-center shadow-xl relative overflow-hidden border border-blue-800 break-inside-avoid">
+                        <div className="absolute -top-10 -right-10 p-4 opacity-10 transform rotate-12">
+                            <Icon name="Rocket" size={250} />
+                        </div>
+                        <div className="relative z-10 flex flex-col items-center">
+                            <div className="inline-flex items-center gap-2 bg-blue-500/30 px-4 py-1.5 rounded-full text-blue-100 text-xs font-bold tracking-widest mb-6 border border-blue-400/30">
+                                <Icon name="Sparkles" size={14} className="text-yellow-300" />
+                                {t.hero.badge}
+                            </div>
+                            <h1 className="text-4xl md:text-6xl font-black mb-6 leading-tight drop-shadow-md">
+                                {t.hero.title}
+                            </h1>
+                            <p className="text-lg md:text-xl text-blue-100 max-w-3xl leading-relaxed opacity-90">
+                                {t.hero.subtitle}
+                            </p>
+                        </div>
+                    </div>
+
+                    {/* Intro Message */}
+                    <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-sm text-center max-w-3xl mx-auto relative break-inside-avoid">
+                        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white px-4 py-1 rounded-full border border-slate-200 text-blue-600">
+                            <Icon name="Target" size={24} />
+                        </div>
+                        <p className="text-slate-600 text-lg md:text-xl leading-relaxed mt-2">
+                            {t.intro}
+                        </p>
+                    </div>
+
+                    {/* Features Grid - Zig Zag */}
+                    <div className="space-y-12">
+                        {t.features.map((f, i) => (
+                            <div key={i} className={`flex flex-col ${i % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'} gap-8 items-stretch bg-white p-8 rounded-3xl border border-slate-100 shadow-sm hover:shadow-md transition-shadow break-inside-avoid`}>
+                                {/* Text Content */}
+                                <div className="flex-1 flex flex-col justify-center space-y-4">
+                                    <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 shadow-inner">
+                                        <Icon name={f.icon} size={28} />
+                                    </div>
+                                    <h3 className="text-2xl md:text-3xl font-extrabold text-slate-800 leading-tight">
+                                        {f.title}
+                                    </h3>
+                                    <p className="text-slate-600 text-lg leading-relaxed">
+                                        {f.desc}
+                                    </p>
+                                </div>
+                                
+                                {/* Image Placeholder */}
+                                <div className="flex-1 w-full min-h-[250px] md:min-h-[300px]">
+                                    <div className="w-full h-full bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 overflow-hidden relative group flex items-center justify-center transition-all hover:bg-slate-100">
+                                        <div className="text-center text-slate-400 p-6">
+                                            <Icon name="LayoutGrid" size={48} className="mx-auto mb-3 opacity-50" />
+                                            <span className="font-medium bg-white px-4 py-2 rounded-lg shadow-sm block border border-slate-200">
+                                                {f.imgAlt}
+                                            </span>
+                                            <span className="text-xs mt-3 block opacity-70">(מקום שמור לצילום מסך)</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Comparison Table */}
+                    <div className="bg-white rounded-3xl border border-slate-200 shadow-lg overflow-hidden mt-16 break-inside-avoid">
+                        <div className="bg-slate-900 text-white p-6 text-center">
+                            <h3 className="text-2xl md:text-3xl font-bold flex items-center justify-center gap-3">
+                                <Icon name="Layers" size={28} className="text-blue-400" />
+                                {t.comparison.title}
+                            </h3>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <table className={`w-full border-collapse ${isRtl ? 'text-right' : 'text-left'}`}>
+                                <thead>
+                                    <tr className="bg-slate-50 border-b border-slate-200">
+                                        <th className="p-4 font-bold text-slate-700 w-1/4">{t.comparison.headers[0]}</th>
+                                        <th className="p-4 font-bold text-slate-500 w-1/3">{t.comparison.headers[1]}</th>
+                                        <th className="p-4 font-black text-blue-700 w-1/3 bg-blue-50/50">{t.comparison.headers[2]}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {t.comparison.rows.map((row, idx) => (
+                                        <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+                                            <td className={`p-4 font-bold text-slate-800 ${isRtl ? 'border-l' : 'border-r'} border-slate-100`}>
+                                                {row.feature}
+                                            </td>
+                                            <td className={`p-4 text-slate-500 text-sm ${isRtl ? 'border-l' : 'border-r'} border-slate-100 leading-relaxed`}>
+                                                {row.old}
+                                            </td>
+                                            <td className="p-4 text-blue-900 font-medium text-sm bg-blue-50/30 leading-relaxed">
+                                                <div className="flex items-start gap-2">
+                                                    <Icon name="CheckCircle" size={18} className="text-blue-600 shrink-0 mt-0.5" />
+                                                    <span>{row.new}</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {/* Call to Action */}
+                    <div className="bg-slate-900 rounded-[2rem] p-10 text-center text-white shadow-2xl border border-slate-800 relative overflow-hidden mt-16 break-inside-avoid">
+                        <div className="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-blue-600 via-purple-500 to-emerald-400"></div>
+                        <h3 className="text-3xl font-black mb-4">{t.cta.title}</h3>
+                        <p className="text-slate-400 text-lg mb-8 max-w-2xl mx-auto">{t.cta.subtitle}</p>
+                        <button className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 px-10 rounded-full transition-all text-lg shadow-[0_0_20px_rgba(37,99,235,0.4)] hover:shadow-[0_0_30px_rgba(37,99,235,0.6)] hover:-translate-y-1">
+                            {t.cta.button}
+                        </button>
+                    </div>
+                </div>
+            );
+        };
 
         const OnePager = ({ lang }) => {
             const t = siteContent[lang].onepager;
@@ -566,71 +872,9 @@ This presentation may contain forward-looking statements, including statements r
             );
         };
 
-        const ScriptCard = ({ title, body, subject }) => {
-            const [copied, setCopied] = useState(false);
-            const handleCopy = () => {
-                const text = subject ? `${subject}\n\n${body}` : body;
-                navigator.clipboard.writeText(text);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 2000);
-            };
-            return (
-                <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden mb-4">
-                    <div className="px-4 py-3 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-                        <h3 className="font-bold text-sm text-slate-700 flex items-center gap-2"><Icon name="MessageSquare" size={16} /> {title}</h3>
-                        <button onClick={handleCopy} className="flex items-center gap-1 px-3 py-1 rounded text-xs transition-colors bg-white border hover:bg-slate-50 text-slate-600">
-                            {copied ? <span>הועתק!</span> : <span>העתק</span>}
-                        </button>
-                    </div>
-                    <div className="p-5 bg-white text-sm">
-                        {subject && <div className="mb-3 pb-3 border-b border-dashed border-slate-100 font-semibold text-slate-800">{subject}</div>}
-                        <pre className="whitespace-pre-wrap font-sans text-slate-600 leading-relaxed">{body}</pre>
-                    </div>
-                </div>
-            );
-        };
-
-        const MeetingCard = ({ section }) => (
-            <div className="bg-white rounded-lg border border-slate-200 p-5 mb-4 shadow-sm">
-                <h3 className="font-bold text-lg text-slate-800 mb-3 flex items-center gap-2"><Icon name="Mic" size={18} className="text-blue-500" /> {section.title}</h3>
-                {section.content && <div className="bg-slate-50 p-4 rounded text-slate-700 border border-slate-100 italic text-sm leading-relaxed whitespace-pre-wrap">{section.content}</div>}
-                {section.questions && <div className="space-y-4">{section.questions.map((q, i) => <div key={i}><div className="text-sm font-bold text-blue-800 mb-1">{q.q}</div><div className="bg-blue-50/50 p-3 rounded text-slate-700 border border-blue-100 text-sm leading-relaxed">{q.text}</div></div>)}</div>}
-            </div>
-        );
-
-        const RoadmapCard = ({ step }) => {
-            const [isOpen, setIsOpen] = useState(false);
-            return (
-                <div className="bg-white rounded-lg border border-slate-200 mb-4 shadow-sm overflow-hidden">
-                    <div className="p-4 flex items-center justify-between cursor-pointer hover:bg-slate-50" onClick={() => setIsOpen(!isOpen)}>
-                        <div className="flex items-center gap-4">
-                            <div className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${isOpen ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'}`}>
-                                <Icon name={step.icon} size={20} />
-                            </div>
-                            <div>
-                                <h3 className="font-bold text-slate-800 text-lg">{step.phase}</h3>
-                                <div className="text-xs font-semibold text-slate-400 uppercase flex items-center gap-1"><Icon name="Clock" size={12} /> {step.duration}</div>
-                            </div>
-                        </div>
-                        <Icon name={isOpen ? "ChevronUp" : "ChevronDown"} size={16} className="text-slate-400"/>
-                    </div>
-                    {isOpen && (
-                        <div className="p-4 pt-0 border-t border-slate-100 bg-slate-50/50">
-                            <p className="text-sm text-slate-600 mb-4 mt-4 font-medium">{step.description}</p>
-                            <div className="mb-4">
-                                <div className="text-xs font-bold text-slate-400 uppercase mb-2">משימות לביצוע:</div>
-                                <ul className="space-y-2">{step.tasks.map((task, i) => <li key={i} className="flex gap-2 text-sm text-slate-700 items-start"><div className="w-1.5 h-1.5 rounded-full bg-blue-400 mt-1.5 shrink-0"></div>{task}</li>)}</ul>
-                            </div>
-                            <div className="bg-amber-50 border border-amber-100 p-3 rounded text-xs text-amber-800 flex gap-2 items-start"><Icon name="AlertTriangle" size={14} className="mt-0.5 shrink-0" /><span><span className="font-bold">טיפ: </span>{step.tips}</span></div>
-                        </div>
-                    )}
-                </div>
-            );
-        };
-
-        const App = () => {
+        const MainApp = () => {
             const [lang, setLang] = useState('he');
-            const [activeTab, setActiveTab] = useState('onepager');
+            const [activeTab, setActiveTab] = useState('newsletter'); // Setting newsletter as default to show it off
             const t = siteContent[lang]; 
             const isRtl = lang === 'he';
 
@@ -646,24 +890,30 @@ This presentation may contain forward-looking statements, including statements r
                 <div dir={isRtl ? 'rtl' : 'ltr'}>
                      <ErrorBoundary>
                         <nav className="bg-slate-900 text-white p-3 shadow-lg sticky top-0 z-50 no-print">
-                            <div className="max-w-6xl mx-auto flex justify-between items-center">
-                                <div className="flex items-center gap-4">
-                                    <div className="font-black text-lg tracking-tighter">ONEBTN</div>
-                                    <div className="h-5 w-px bg-slate-700 mx-2 hidden md:block"></div>
-                                    <div className="flex gap-2 overflow-x-auto">
+                            <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
+                                <div className="flex items-center gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
+                                    <div className="font-black text-lg tracking-tighter shrink-0">ONEBTN</div>
+                                    <div className="h-5 w-px bg-slate-700 mx-1 hidden md:block"></div>
+                                    <div className="flex gap-2 min-w-max">
                                         <button onClick={() => setActiveTab('onepager')} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${activeTab === 'onepager' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 text-slate-300'}`}>{t.nav.onepager}</button>
+                                        <button onClick={() => setActiveTab('newsletter')} className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all flex items-center gap-1 whitespace-nowrap shadow-md ${activeTab === 'newsletter' ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white' : 'bg-slate-800 text-purple-300 hover:bg-slate-700'}`}><Icon name="Rocket" size={12}/>{t.nav.newsletter}</button>
+                                        <div className="h-5 w-px bg-slate-700 mx-1"></div>
                                         <button onClick={() => setActiveTab('scripts')} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all whitespace-nowrap ${activeTab === 'scripts' ? 'bg-blue-600 text-white' : 'hover:bg-slate-800 text-slate-300'}`}>{t.nav.scripts}</button>
                                         <button onClick={() => setActiveTab('meeting')} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 whitespace-nowrap ${activeTab === 'meeting' ? 'bg-amber-500 text-white' : 'hover:bg-slate-800 text-amber-400'}`}><Icon name="Coffee" size={12}/>{t.nav.meeting}</button>
                                         <button onClick={() => setActiveTab('roadmap')} className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 whitespace-nowrap ${activeTab === 'roadmap' ? 'bg-emerald-600 text-white' : 'hover:bg-slate-800 text-emerald-400'}`}><Icon name="Target" size={12}/>{t.nav.roadmap}</button>
                                     </div>
                                 </div>
-                                <button onClick={() => setLang(l => l === 'he' ? 'en' : 'he')} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded text-xs border border-slate-700 shrink-0">
+                                <button onClick={() => setLang(l => l === 'he' ? 'en' : 'he')} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 px-3 py-1.5 rounded text-xs border border-slate-700 shrink-0 self-end md:self-auto">
                                     <Icon name="Globe" size={14} /> <span>{lang === 'he' ? 'English' : 'עברית'}</span>
                                 </button>
                             </div>
                         </nav>
 
-                        <main className="max-w-6xl mx-auto p-4">
+                        <main className="max-w-6xl mx-auto p-4 md:p-6">
+                            <div className={activeTab === 'newsletter' ? 'block' : 'hidden tab-content'}>
+                                <NewsletterTab lang={lang} />
+                            </div>
+
                             <div className={activeTab === 'onepager' ? 'block active-print' : 'hidden tab-content'}>
                                 <OnePager lang={lang} />
                             </div>
@@ -692,7 +942,7 @@ This presentation may contain forward-looking statements, including statements r
             );
         };
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        ReactDOM.createRoot(document.getElementById('root')).render(<MainApp />);
     </script>
 </body>
 </html>
